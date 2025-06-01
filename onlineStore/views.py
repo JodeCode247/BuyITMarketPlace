@@ -1,0 +1,454 @@
+from django.shortcuts import render,redirect,get_object_or_404
+from .models import Product,MyUsers,Cart,CartItems,Category,Order
+import json
+from django.http import JsonResponse,HttpResponse
+from django.views.decorators.csrf import csrf_protect,csrf_exempt # Import csrf_protect
+from django.contrib.auth.decorators import login_required,user_passes_test
+from django.contrib import messages
+from django.contrib.auth import login,logout
+from django.core.exceptions import FieldError
+from django.utils import timezone
+from django.db.models import Q
+from .handler import upload_to_drive
+from django.conf import settings
+from . import paystack
+
+
+
+def test_func(user):
+    # Example: Check if the user has a certain permission
+        return user.is_authenticated # example.
+
+
+@csrf_protect # Enable CSRF protection
+def get_cart_count(request):
+    cart = get_cart(request)
+    if cart:
+        count = cart.items_count
+    else:
+        count = 0
+    return JsonResponse({'count': count})
+
+def index(request):
+    if request.method == 'GET':
+        query = request.GET.get('query')
+        if query:
+        
+            products = Product.objects.filter(Q(name__icontains=query)
+                                            | Q(price__icontains=query)
+                                            | Q(category__name__icontains=query)
+                                            | Q(description__icontains=query)).values()
+            if products.exists():
+                context = {'products': products}
+                return render(request, 'onlineStore/index.html', context)
+            
+            elif not products.exists():
+                # Split the query into words and search for each word
+                query= query.split(' ')
+                count = len(query)
+                if count:
+                    for i in range(count):
+                        query=query[i].strip()
+                        loop_count = len(query)
+                        while loop_count > 2:
+                            for i in range(loop_count):
+                                query=query[0:loop_count].strip()
+                                products = Product.objects.filter(Q(name__icontains=query)
+                                                | Q(price__icontains=query)
+                                                | Q(category__name__icontains=query)
+                                                ).values()
+                                    
+                                if products.exists():
+                                    context = {'products': products}
+                                    return render(request, 'onlineStore/index.html', context)
+                                else:
+                                    loop_count-=1
+                    if not products.exists():
+                        messages.error(request, 'No products found matching your search.')
+                        return redirect('onlinestore:home')
+                
+            
+        
+            else:
+                messages.error(request, 'No products found matching your search.')
+                return redirect('onlinestore:home')
+            
+
+   
+    products = Product.objects.only('name')
+    
+    context = {'products':products}
+    return render(request,"onlineStore/index.html",context)
+
+def add_to_cart(request):
+    if request.method == 'POST':
+        try:      
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            print(data)
+
+            if product_id:
+                product = Product.objects.get(pk=product_id)
+                cart = get_cart(request)
+                print(cart.cart_id)
+
+                cart_item, created = CartItems.objects.get_or_create(cart=cart, product=product)
+
+                if not created:
+                    cart_item.quantity += 1
+                    cart_item.save()
+
+                return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Product ID missing'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Product.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+ 
+def get_cart(request):
+    # ... (your get_cart function)
+    if request.user.is_authenticated:
+        
+        cart, created = Cart.objects.get_or_create(user=request.user)
+    else:
+        cart_id = request.session.get('cart_id')
+        print(request.user)
+        if cart_id:
+            try:
+                cart = Cart.objects.get(cart_id=cart_id, user__isnull=True)
+            except Cart.DoesNotExist:
+                cart = Cart.objects.create()
+        else:
+            cart = Cart.objects.create()
+            request.session['cart_id'] = str(cart.cart_id)
+    return cart
+
+@csrf_protect # Enable CSRF protection
+def viewCart(request):
+    cart = get_cart(request)
+    
+    if request.method=='POST':
+        try:  
+            print('action occuers')    
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            action = data.get('action')
+            print(data)
+            product = Product.objects.get(pk=product_id)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+            
+        try:
+            cart_item = CartItems.objects.get(cart=cart,product=product)
+            
+            if action=="decrement":
+                if cart_item.quantity >= 1:
+                    cart_item.quantity-=1
+                    cart_item.save()
+                    return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
+
+
+            elif action=='increment':
+                cart_item.quantity+=1
+                cart_item.save()
+                return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
+            
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
+
+        except CartItems.DoesNotExist:
+
+            return HttpResponse(request,"cart not found")
+
+            
+    
+    if cart :
+            cart_items =cart.cartItems.all()
+
+            total_price=cart.total_price
+            cart_id=cart.id
+
+            
+            context ={"total_price":total_price,'cart_items':cart_items,"cart_id":cart_id}
+            return render(request,"onlineStore/cart.html",context)
+       
+
+@csrf_protect # Enable CSRF protection
+def delete_cart_item(request):
+    print(request.body)
+    if request.method=='POST':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            print(request.body)
+           
+            if product_id:
+                product = Product.objects.get(pk=product_id)
+                cart = get_cart(request)
+                
+                try:
+                    cart_item = CartItems.objects.get(cart=cart, product=product)
+                    cart_item.delete()
+                    return JsonResponse({'status': 'success', 'message': 'Cart item deleted'})                 
+                except CartItems.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': 'Cart item not found'}, status=404)
+                
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Product ID missing'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        
+        except Product.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
+def products_description(request,id):
+        cart= get_cart(request)
+      
+        product = Product.objects.get(id=id)
+
+
+        try:
+            product_cart_item = CartItems.objects.get(product=product,cart=cart)
+            
+    
+        except CartItems.DoesNotExist:
+            product_cart_item =''
+        
+        context={'product':product,'product_cart_item':product_cart_item}
+
+        return render(request,"onlineStore/product.html",context)
+
+
+def create_product(request):
+    if request.method == 'POST':
+        name = request.POST.get('name').title()
+        category_name = request.POST.get('category', '').title()
+        price = request.POST.get('price')
+        description = request.POST.get('description')
+        image = request.FILES.get('image')
+
+        if not all([name, category_name, price, description]):
+            messages.error(request, 'Please fill all fields.')
+            return render(request, 'onlineStore/create_prod.html', {'name': name, 'category': category_name, 'price': price, 'description': description})
+
+        try:
+            category_obj = Category.objects.get(name=category_name)
+        except Category.DoesNotExist:
+            category_obj = Category.objects.create(name=category_name)
+
+        product = Product.objects.create(
+            name=name,
+            category=category_obj,
+            price=price,
+            description=description,
+            image=None  # Initial image set to None, Google Drive handles it
+        )
+
+        if image:
+            upload_response = upload_to_drive(image.open('rb'))
+                  
+
+            if upload_response:
+                print(upload_response)
+                product.image_url = upload_response['secure_url']
+                product.save()  # Save again to store the Google Drive URL and ID
+                messages.success(request, 'Product created successfully with image uploaded ')
+                return redirect('onlinestore:products_description', id=product.id)
+            else:
+                messages.warning(request, 'Product created successfully, but image upload failed.')
+                return redirect('onlinestore:products_description', id=product.id)
+        else:
+            messages.success(request, 'Product created successfully without an image.')
+            return redirect('onlinestore:products_description', id=product.id)
+    
+    return render(request, 'onlineStore/create_prod.html')
+
+
+@csrf_protect # Enable CSRF protection
+@user_passes_test(test_func, login_url='onlinestore:login_user')
+def checkout(request):
+    if request.method=='POST':
+        try:
+            cart= get_cart(request)
+            if cart.items_count > 0 and cart.items_count!=0 :
+                if request.user.is_authenticated:
+                    order = Order.objects.create(cart=cart,user=request.user,
+                                                                total_amount=cart.total_price,
+                                                                )            
+                    data = json.loads(request.body)
+                    if  data.get('payment_option')=='Paystack':
+                        print('PAYSTACK APPROVED')
+                        paystack_data = {'status': 'success',
+                                           'public_key' :settings.PAYSTACK_PUBLIC_KEY,
+                                            'transaction_id': str(order.order_id),
+                                            'amount': order.total_amount, #get the total price from the cart.
+                                            'email': request.user.email,
+                                            'username': request.user.username,
+                                            
+                                            
+                                            # Add any other data needed by paystack
+                                        }
+                                
+                                # return redirect('onlinestore:home')
+                        return JsonResponse(paystack_data,)
+                    
+                    elif  data.get('payment_option')=='flutterwave':
+                        print('flutter APPROVED')
+                        data = {'status': 'success',
+                                            'transaction_id':  str(order.order_id),
+                                            'amount': order.total_amount, #get the total price from the cart.
+                                            'email': request.user.email,
+                                            'username': request.user.username,
+                                            
+                                            
+                                            # Add any other data needed by Flutterwave
+                                        }
+                                
+                        return JsonResponse(data)
+                    else:
+                        return HttpResponse('invalid payment execution')
+                else:
+                    return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+            else:
+                
+                return JsonResponse({'error': 'Cart is empty Please add items to your cart'}, status=400) # added json response.
+
+                            
+                    
+        except Cart.DoesNotExist:
+                return JsonResponse({'error': 'Cart not found'}, status=404)
+        # except Exception as e:
+        #         return JsonResponse({'error': str(e)}, status=500) # Internal Server Error
+    
+
+
+
+def confirm_order_payment(request, transaction_id):
+    order = Order.objects.get(order_id=transaction_id)
+    if order.status == 'paid':
+        messages.info(request, 'Order already confirmed.')
+        return redirect('onlinestore:home')
+    # Verify the payment with Paystack
+    response = paystack.verify_payment(transaction_id)
+    if response:
+        messages.success(request, 'Order payment confirmed successfully!')
+        return redirect('onlinestore:home')
+    else:
+        messages.error(request, 'Order payment confirmation failed.')
+        return redirect('onlinestore:home')
+
+@login_required(login_url='onlinestore:login_user')
+def orders(request):
+    orders = Order.objects.filter(user=request.user, status='paid').order_by('-created_at')
+
+    if request.method == 'POST':
+        filter_date = request.POST.get('filter-date')
+        print(filter_date)
+        if filter_date:
+            try:
+                # Attempt to filter by date.  This will work for dates without time.
+                orders = orders.filter(created_at__date=filter_date).order_by('-created_at')
+                if not orders.exists():
+                    messages.error(request, 'No purchases found for the selected date.')
+                    return redirect('onlinestore:orders')
+            except FieldError:
+                 try:
+                    # Convert filter_date to a datetime object at midnight
+                    filter_date_start = timezone.datetime.strptime(filter_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.get_current_timezone())
+                    filter_date_end = filter_date_start + timezone.timedelta(days=1)
+                    orders = orders.filter(created_at__gte=filter_date_start, created_at__lt=filter_date_end).order_by('-created_at')
+                    if not orders.exists():
+                        messages.error(request, 'No purchases found for the selected date.')
+                        return redirect('onlinestore:orders')
+                 except ValueError:
+                    messages.error(request, 'Invalid date format. Please use YYYY-MM-DD.')
+                    return redirect('onlinestore:orders')
+        else:
+            messages.error(request, 'No purchased during this period select a valid date.')
+            return redirect('onlinestore:orders')
+
+    context = {'orders': orders}
+    return render(request, 'onlineStore/orders.html', context)
+
+
+def register_user(request):
+    if request.method=='POST':
+        username = request.POST.get('username').title()
+        password = request.POST.get('password')
+        password2 = request.POST.get('password2')
+        email = request.POST.get('email')
+        if password2==password:
+            try:
+                created = MyUsers.objects.get(email=email)
+                if created:
+                    messages.success(request, 'ALAYE THIS EMAIL IS NO LONGER AVAILABLE ENTER ANOTHER EMAIL')
+                    return redirect('onlinestore:register')
+            
+            except:
+                user= MyUsers.objects.create_user(username=username,email=email,password=password,is_staff=True,is_active=True)
+                if user:
+                    messages.success(request, 'User registered successfully! PLEASE LOGIN NOW')
+
+                    return redirect('onlinestore:login_user')
+            else:
+                 messages.success(request, 'ERROR OCCURED SIGNUP FAILED')
+                 return redirect('onlinestore:register')
+
+
+        else:
+            messages.success(request, 'PASSWORD MISMATCH')
+            return redirect('onlinestore:register')
+
+    return render (request,'userform.html')
+
+def login_user(request):
+    if request.method=='POST':
+        password = request.POST.get('password')
+        email = request.POST.get('username')
+        if password and email: 
+            print(email)
+            try:
+                user=MyUsers.objects.get(email=email)
+
+            except MyUsers.DoesNotExist:
+                 messages.success(request,'user not found')
+                 return redirect('onlinestore:login_user')
+            
+            if user.check_password(password):
+                print(user)
+                if user is not None:
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend') #specify the backend.
+                    messages.success(request,'you are logged in')
+                    return redirect('onlinestore:home')
+                
+            
+    return render (request,'userform.html')
+
+
+def logout_user(request):
+    logout(request)
+    messages.success(request,'you are logged out')
+    return redirect('onlinestore:home')
+
+
+@csrf_protect # Enable CSRF protection
+def clear_cart(request):
+    if request.method == 'POST':
+        cart = get_cart(request)
+        if cart:
+            cart_items = cart.cartItems.all()
+            cart_items.delete()
+            return redirect('onlinestore:cart') # Redirect to the cart page
+        else:
+            return redirect('onlinestore:home') #Cart not found, redirect to home.
+    return redirect('onlinestore:cart') #if not a post request, redirect to cart

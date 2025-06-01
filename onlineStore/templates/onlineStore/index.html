@@ -1,0 +1,37 @@
+{% extends "onlineStore/base.html" %}
+
+    
+    
+            
+            {% block content %}
+            <section class="products">
+                <h2>
+                    <form action="" method="get">
+                        <span onclick="toggleMenu()"><strong>☰</strong></span>
+                        <input class="bar" type="text" placeholder="Search products.." name='query'>
+                        <button><i class="fas fa-shopping-cart"></i></button>
+                </form>
+                </h2>
+                <div class="product-grid">
+                    {% for product in products %}               
+                    
+                    <div class="product">
+                        <img src="{{product.image_url}}" alt="item {{product.id}}">
+                        <a href='{% url "onlinestore:products_description" product.id %}'><h4>{{product.name}}</h4></a>
+                        <p>₦{{product.price}}</p>
+                        <button onclick="addItem({{product.id}})" >Add to Cart</button>
+                    </div>
+                    
+                    {% endfor %}
+                
+                </div>
+            </section>
+         
+            {% endblock content %}
+    
+
+
+ 
+    
+   
+    

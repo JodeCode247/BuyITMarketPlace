@@ -1,0 +1,280 @@
+{% extends "onlineStore/base.html" %}
+{% block content %}
+    <div class="product-container">
+        <div class="product-gallery">
+            <div class="main-image">
+                <img src="{{product.image_url}}" alt="Product Main Image">
+            </div>
+            <div class="thumbnail-images">
+                <img src="{{product.image_url}}" alt="Thumbnail 1">
+                <img src="{{product.image_url}}" alt="Thumbnail 4">
+            </div>
+        </div>
+
+        <div class="product-details">
+            <h1 class="product-title">{{product.name}}</h1>
+            
+            <div class="product-rating">
+                <div class="stars">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <span class="rating-count">(124 reviews)</span>
+            </div>
+
+            <div class="product-price">
+                <span class="current-price">₦{{product.price}}</span>
+                <span class="original-price">$199.99</span>
+                <span class="discount-percentage">35% OFF</span>
+            </div>
+
+            <div class="product-description">
+                <h3>Product Description</h3>
+                <p>{{product.description}}</p>
+            </div>
+
+            <div class="product-options">
+                <div class="color-selection">
+                    <h3>Color</h3>
+                    <div class="color-choices">
+                        <div class="color-option active" data-color="black"></div>
+                        <div class="color-option" data-color="white"></div>
+                        <div class="color-option" data-color="blue"></div>
+                    </div>
+                </div>
+
+                <div class="quantity-selector">
+                    <h3>Quantity</h3>
+                    <div class="quantity-control">
+                        <button onclick="updateCart('decrement',{{product.id}})" class="qty-btn minus">-</button>
+                        <input type="number" class="qty-input" {% if product_cart_item %} value="{{product_cart_item.quantity}}" {% else %} value =0 {% endif %}  min="1" >
+                        <button onclick="updateCart('increment',{{product.id}})"  class="qty-btn plus">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-actions">
+                <button onclick="addItem({{product.id}})"  class="add-to-cart">
+                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                </button>
+                <button class="buy-now">Buy Now</button>
+            </div>
+
+            <div class="product-features">
+                <h3>Key Features</h3>
+                <ul>
+                    <li>Wireless Bluetooth 5.0</li>
+                    <li>Noise Cancellation</li>
+                    <li>20-Hour Battery Life</li>
+                    <li>Comfortable Over-Ear Design</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+<style>
+:root {
+    --primary-color: orange;
+    --secondary-color: #f4f4f4;
+    --text-color: #333;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--secondary-color);
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.product-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 50px auto;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.product-gallery {
+    flex: 1;
+    padding: 20px;
+}
+
+.main-image img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.thumbnail-images {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.thumbnail-images img {
+    width: 22%;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.thumbnail-images img:hover {
+    opacity: 0.7;
+}
+
+.product-details {
+    flex: 1;
+    padding: 30px;
+}
+
+.product-title {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.product-rating {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.stars {
+    color: var(--primary-color);
+    margin-right: 10px;
+}
+
+.rating-count {
+    color: #777;
+}
+
+.product-price {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.current-price {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #888;
+    margin-right: 15px;
+}
+
+.discount-percentage {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.product-description p {
+    margin-bottom: 20px;
+}
+
+.color-selection, .quantity-selector {
+    margin-bottom: 20px;
+}
+
+.color-choices {
+    display: flex;
+}
+
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.color-option.active {
+    border-color: var(--primary-color);
+}
+
+.color-option[data-color="black"] { background-color: black; }
+.color-option[data-color="white"] { background-color: white; border: 1px solid #ddd; }
+.color-option[data-color="blue"] { background-color: blue; }
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+}
+
+.qty-btn {
+    background-color: var(--secondary-color);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.qty-input {
+    width: 50px;
+    text-align: center;
+    margin: 0 10px;
+}
+
+.product-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.add-to-cart, .buy-now {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.add-to-cart {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.buy-now {
+    background-color: #f0f0f0;
+    color: var(--text-color);
+}
+
+.product-features ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .product-container {
+        flex-direction: column;
+        margin: 20px;
+    }
+
+    .product-gallery, .product-details {
+        flex: none;
+        width: 100%;
+    }
+}
+</style>
+
+{% endblock %}

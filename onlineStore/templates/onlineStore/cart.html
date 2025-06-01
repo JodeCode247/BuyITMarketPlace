@@ -1,0 +1,342 @@
+{% extends "onlineStore/base.html" %}
+
+
+{% block content %}
+
+<style>
+    body {
+        font-family: sans-serif;
+        
+    }
+
+    .checkout-page {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .cart-items {
+        flex: 2;
+        border-right: 1px solid #ddd;
+        padding-right: 20px;
+    }
+
+    .cart-summary {
+        flex: 1;
+        padding-left: 20px;
+    }
+
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        padding: 10px 0;
+        margin-bottom: 15px; /* Space between items */
+    }
+
+    .item-details {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .item-details img {
+        width: 80px;
+        margin-right: 10px;
+    }
+
+    .item-info {
+        flex-grow: 1;
+    }
+
+    .item-info h3 {
+        margin: 0;
+        font-size: 16px;
+    }
+
+    .item-info p {
+        margin: 5px 0;
+        font-size: 12px;
+    }
+
+    .item-actions {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .item-actions p {
+        margin: 2px 0;
+        font-size: 12px;
+    }
+
+    .remove-button {
+        background: none;
+        border: none;
+        color: #f00;
+        cursor: pointer;
+        font-size: 12px;
+        padding: 0;
+        margin-bottom: 5px;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+    }
+
+    .quantity-control button {
+        background: #f0f0f0;
+        border: 1px solid #ddd;
+        padding: 5px 20px;
+        cursor: pointer;
+        margin: 0 5px;
+        font-size: 14px;
+    }
+
+    .cart-summary h2 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    .summary-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .summary-details p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .checkout-button {
+        background-color: orange;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        
+    }
+
+    /* Adjustments for Discounts */
+    .item-actions p:nth-child(2) {
+        color: green; /* Discount color */
+    }
+
+    .item-actions p:nth-child(2) span {
+        color: red; /* Original price color */
+        text-decoration: line-through;
+    }
+    .popup-container {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* Ensure it's on top */
+    }
+
+    .popup-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 300px;
+        text-align: center;
+    }
+    .close-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.5em;
+    }
+
+    .payment-button {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color:rgb(255, 153, 0); /* Example button color */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>
+    <main class="checkout-page">
+        <section class="cart-items">
+            <h2>Cart ({{cart_items.count}})</h2>
+            {% if cart_items.count == 0 %}
+            
+            <h2>CART EMPTY SHOP MORE,   OGA WHY YOU NEVER BUY FROM US</h2>
+           
+            {% endif %}
+            {% for item in cart_items %}
+            
+            
+            <div class="cart-item">
+                <div class="item-details">
+                    <img src="{{item.product.image_url}}"alt="image">
+                    <div class="item-info">
+                        <a href='{% url "onlinestore:products_description" item.product.id %}'><h3>{{item.product.name}}</h3></a>
+                        <p>Variation: BLACK</p>
+                        <p>Few units left</p>
+                        <p>BUY.IT EXPRESS</p>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <p>₦{{item.product.price}} discount</p>
+                     <p>₦{{item.sum_price}}</p>
+                    <button onclick="delete_cart_item({{item.product.id}})" class="remove-button">Remove</button>
+                    <div class="quantity-control">
+
+                        
+       
+                            <input type="hidden" id="action" name="action"  >
+                            <button onclick="updateCart('decrement',{{item.product.id}})">-</button>
+                       
+                        
+                           <span>{{item.quantity}}</span> 
+                        
+                           <button  onclick="updateCart('increment',{{item.product.id}})">+</button>
+                        
+                  
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+  
+            <button onclick='clearCart()' class="checkout-button">Clear cart</button>
+        </section>
+
+        <section class="cart-summary">
+            <h2>CART SUMMARY</h2>
+            <div class="summary-details">
+                <p>Subtotal</p>
+                <p>₦  {{total_price}}</p>
+            </div>
+            <button id="payment-options-button" class="checkout-button">Checkout {% if total_price %}(₦ {{total_price}}){% endif %} </button>
+        </section>
+    </main>
+
+    <div class="popup-container" id="payment-popup">
+        <div class="popup-content">
+            <button class="close-button" id="close-popup">&times;</button>
+            <h2>Choose Payment Method</h2>                  
+            <button class="payment-button" id="paystack-pay">Paystack</button>
+            <button class="payment-button" id="card-pay">Credit Card (not availabe yet)</button>
+        </div>
+    </div>
+
+<script>
+        
+        const popupContainer = document.getElementById('payment-popup');
+        const closeButton = document.getElementById('close-popup');
+        const paystackButton = document.getElementById('paystack-pay');
+        const cardButton = document.getElementById('card-pay');
+
+        document.getElementById('payment-options-button').addEventListener('click', () => {
+            popupContainer.style.display = 'flex';
+        });
+
+        closeButton.addEventListener('click', () => {
+     
+            popupContainer.style.display = 'none';
+
+        });
+        
+
+        paystackButton.addEventListener('click', () => {
+            // Handle Paystack payment logic
+            console.log("Paystack payment initiated");
+            fetch('/initialize_payment/', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'), // CSRF protection
+                },
+                body: JSON.stringify({payment_option: "Paystack",
+                          }), // Send any necessary data
+            })
+            .then(response => response.json())
+            
+            .then(data => {
+                
+                console.log('Response from server:', data); 
+                if (data.status === 'success') {
+                    let handler = PaystackPop.setup({
+                        key: data.public_key, // Your Paystack public key
+                        email: data.email,
+                        amount: data.amount*100, 
+                        currency: 'NGN',
+                        ref: data.transaction_id, // Transaction reference
+                        onClose: function() {
+                            alert('Window closed.');
+                        },
+                        callback: function(response) {
+                            // Redirect to a success page or perform other actions
+                           window.location.href = '/confirm_order_payment/' + data.transaction_id; // Redirect to success page.
+                        }
+                    });
+                    handler.openIframe();
+                } else {
+                    alert( data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+          // Add your paystack payment code here
+        popupContainer.style.display = 'none';
+
+        });
+    
+
+        
+
+        cardButton.addEventListener('click', () => {
+            // Handle Credit Card payment logic.
+            console.log("Credit Card payment initiated");
+            // Add your card payment code here
+            popupContainer.style.display = 'none';
+
+        });
+
+        // Close the popup if the user clicks outside the content
+        window.addEventListener('click', (event) => {
+            if (event.target === popupContainer) {
+                popupContainer.style.display = 'none';
+            }
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+    <script src="https://checkout.flutterwave.com/v3.js"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+
+
+{% endblock content %}

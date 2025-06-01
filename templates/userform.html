@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register - Your Site Name</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(function(message) {
+                alert(message.textContent);
+            });
+        });
+    </script>
+    <style>
+        /* Inherit styles from your existing styles.css (adjust as needed) */
+        .social-login button i{
+            font-size: 25px;
+        }
+        
+        body {
+
+            font-family: sans-serif; /* Example font */
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px; /* Increased padding */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 400px; /* Increased width */
+        }
+
+        .form-switch {
+            text-align: center;
+            margin-bottom: 30px; /* Increased margin */
+        }
+
+        .form-switch button {
+            background: none;
+            border: none;
+            color: orange; /* Theme color */
+            cursor: pointer;
+            padding: 10px 15px; /* Increased padding */
+            font-size: 1.1em; /* Increased font size */
+        }
+
+        .form-group {
+            margin-bottom: 20px; /* Increased margin */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px; /* Increased margin */
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px; /* Increased padding */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em; /* Increased font size */
+        }
+
+        .form-group button {
+            background-color: orange; /* Theme color */
+            color: white;
+            border: none;
+            padding: 12px 18px; /* Increased padding */
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1em; /* Increased font size */
+        }
+
+        .form-group button:hover {
+            background-color: #ff9800; /* Slightly darker orange */
+        }
+
+        #register-form {
+            display: none; /* Initially hide register form */
+        }
+
+        .social-login {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .social-login button {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .social-login button img {
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        /* Google Button Color */
+        #google-register {
+            color: #DB4437; /* Google Red */
+        }
+
+        /* Facebook Button Color */
+        #facebook-register {
+            color: #4267B2; /* Facebook Blue */
+        }
+    </style>
+    \
+</head>
+<body>
+    {% if messages %}
+<div>
+    {% for message in messages %}
+        <div class="message" style="display: none;">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+    <div class="container">
+        <div class="form-switch">
+            <button id="login-switch">Login</button>
+            <button id="register-switch">Register</button>
+        </div>
+
+        <form id="login-form" method= 'post' action= "{% url 'onlinestore:login_user' %}">
+            {% csrf_token %}
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="login-username">Username</label>
+                <input type="email" id="login-username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" name="password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Login</button>
+            </div>
+        </form>
+
+        <form id="register-form"  action= "{% url 'onlinestore:register' %}" method='post'>
+            {% csrf_token %}
+            <h2>Register</h2>
+            <div class="form-group">
+                <label for="register-username">Username</label>
+                <input type="text" id="register-username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="register-email">Email</label>
+                <input type="email" id="register-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" name="password" required placeholder='password'>
+            </div>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" name="password2" placeholder='confirm password' required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Register</button>
+            </div>
+        </form>
+
+        <div class="social-login">
+            <a href="{% url 'social:begin' 'google-oauth2' %}"><button id="google-register"><i class="fab fa-google"></i></button></a>
+            <button id="facebook-register"><i class="fab fa-facebook-f"></i></button>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        const loginSwitch = document.getElementById('login-switch');
+        const registerSwitch = document.getElementById('register-switch');
+        const googleAuth = document.getElementById('social-login');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const googleRegister = document.getElementById('google-register');
+        const facebookRegister = document.getElementById('facebook-register');
+
+        loginSwitch.addEventListener('click', () => {
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            
+        });
+
+        registerSwitch.addEventListener('click', () => {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            googleAuth.style.visibility = 'hidden';
+        });
+
+        googleRegister.addEventListener('click', () => {
+            // Handle Google registration logic
+            console.log("Google registration initiated");
+            // Add your google registration code here
+        });
+
+        facebookRegister.addEventListener('click', () => {
+            // Handle Facebook registration logic
+            console.log("Facebook registration initiated");
+            // Add your facebook registration code here
+        });
+    </script>
+
+</body>
+</html>
