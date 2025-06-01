@@ -3,7 +3,7 @@ asgiref==3.8.1
 
 
 cloudinary==1.43.0
-cloudpathlib==0.21.02
+cloudpathlib==0.21.0
 cymem==2.0.11
 decorator==5.2.1
 Django==5.0.7
