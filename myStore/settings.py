@@ -125,8 +125,8 @@ AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '32732484875-hrqcb2lkirmo9cerb1der2g898ec2lsd.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 LOGIN_URL = 'login_user'  # Or whatever URL you want for login
 LOGIN_REDIRECT_URL = '/' # Or whatever URL you want after successful 
 
