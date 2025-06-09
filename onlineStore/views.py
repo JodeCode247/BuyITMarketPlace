@@ -30,55 +30,55 @@ def get_cart_count(request):
     return JsonResponse({'count': count})
 
 def index(request):
-    if request.method == 'GET':
-        query = request.GET.get('query')
-        if query:
+    # if request.method == 'GET':
+    #     query = request.GET.get('query')
+    #     if query:
         
-            products = Product.objects.filter(Q(name__icontains=query)
-                                            | Q(price__icontains=query)
-                                            | Q(category__name__icontains=query)
-                                            | Q(description__icontains=query)).values()
-            if products.exists():
-                context = {'products': products}
-                return render(request, 'onlineStore/index.html', context)
+    #         products = Product.objects.filter(Q(name__icontains=query)
+    #                                         | Q(price__icontains=query)
+    #                                         | Q(category__name__icontains=query)
+    #                                         | Q(description__icontains=query)).values()
+    #         if products.exists():
+    #             context = {'products': products}
+    #             return render(request, 'onlineStore/index.html', context)
             
-            elif not products.exists():
-                # Split the query into words and search for each word
-                query= query.split(' ')
-                count = len(query)
-                if count:
-                    for i in range(count):
-                        query=query[i].strip()
-                        loop_count = len(query)
-                        while loop_count > 2:
-                            for i in range(loop_count):
-                                query=query[0:loop_count].strip()
-                                products = Product.objects.filter(Q(name__icontains=query)
-                                                | Q(price__icontains=query)
-                                                | Q(category__name__icontains=query)
-                                                ).values()
+    #         elif not products.exists():
+    #             # Split the query into words and search for each word
+    #             query= query.split(' ')
+    #             count = len(query)
+    #             if count:
+    #                 for i in range(count):
+    #                     query=query[i].strip()
+    #                     loop_count = len(query)
+    #                     while loop_count > 2:
+    #                         for i in range(loop_count):
+    #                             query=query[0:loop_count].strip()
+    #                             products = Product.objects.filter(Q(name__icontains=query)
+    #                                             | Q(price__icontains=query)
+    #                                             | Q(category__name__icontains=query)
+    #                                             ).values()
                                     
-                                if products.exists():
-                                    context = {'products': products}
-                                    return render(request, 'onlineStore/index.html', context)
-                                else:
-                                    loop_count-=1
-                    if not products.exists():
-                        messages.error(request, 'No products found matching your search.')
-                        return redirect('onlinestore:home')
+    #                             if products.exists():
+    #                                 context = {'products': products}
+    #                                 return render(request, 'onlineStore/index.html', context)
+    #                             else:
+    #                                 loop_count-=1
+    #                 if not products.exists():
+    #                     messages.error(request, 'No products found matching your search.')
+    #                     return redirect('onlinestore:home')
                 
             
         
-            else:
-                messages.error(request, 'No products found matching your search.')
-                return redirect('onlinestore:home')
+    #         else:
+    #             messages.error(request, 'No products found matching your search.')
+    #             return redirect('onlinestore:home')
             
 
    
-    products = Product.objects.only('name')
+    # products = Product.objects.only('name')
     
-    context = {'products':products}
-    return render(request,"onlineStore/index.html",context)
+    # context = {'products':products}
+    return render(request,"onlineStore/index.html",)
 
 def add_to_cart(request):
     if request.method == 'POST':

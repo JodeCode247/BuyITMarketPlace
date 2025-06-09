@@ -13,14 +13,14 @@
                 </form>
                 </h2>
                 <div class="product-grid">
-                    {% for product in products %}               
+                    {% comment %} {% for product in products %}               
                     
                     <div class="product">
                         <img src="{{product.image_url}}" alt="item {{product.id}}">
                         <a href='{% url "onlinestore:products_description" product.id %}'><h4>{{product.name}}</h4></a>
                         <p>₦{{product.price}}</p>
                         <button onclick="addItem({{product.id}})" >Add to Cart</button>
-                    </div>
+                    </div> {% endcomment %}
                     
                     {% endfor %}
                 
