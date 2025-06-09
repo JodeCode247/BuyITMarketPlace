@@ -19,8 +19,6 @@ gunicorn
 oauthlib==3.2.2
 packaging==25.0
 pillow==11.0.0
-
-
 python-dotenv==1.0.1
 requests==2.32.3
 requests-file==2.1.0

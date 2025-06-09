@@ -15,8 +15,7 @@ SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "your-custom-domain.com"] # Add your custom domain if applicable
 AUTH_USER_MODEL ="onlineStore.MyUsers"
 
 # Application definition
@@ -71,13 +70,37 @@ WSGI_APPLICATION = 'myStore.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'Jodecode$default',
+#         'USER': 'Jodecode',
+#         'PASSWORD': 'databasepass123',
+#         'HOST': 'Jodecode.mysql.pythonanywhere-services.com',
+#     }
+# }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postdatabase_rktk',
+#         'USER': 'jodecode',
+#         'PASSWORD': 'E0bg1Q9Kij5lIscfddEYg2VMS11pz2dV',
+#         'HOST': 'postdatabase_rktk.oregon-postgres.render.com',
+#         'PORT': '5432',
+#         'OPTIONS': {
+#             'sslmode': 'require', # Render PostgreSQL often requires SSL
+#         },
+#     }
+# }
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -126,7 +149,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('EMAIL_HOST_USER')
 LOGIN_URL = 'login_user'  # Or whatever URL you want for login
 LOGIN_REDIRECT_URL = '/' # Or whatever URL you want after successful 
 
