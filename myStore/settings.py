@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,7 +14,8 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', 'False') == 'True' # Convert DEBUG to boolean
+
 
 ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] # Add your custom domain if applicable
 AUTH_USER_MODEL ="onlineStore.MyUsers"
@@ -81,20 +83,6 @@ WSGI_APPLICATION = 'myStore.wsgi.application'
 #         'HOST': 'Jodecode.mysql.pythonanywhere-services.com',
 #     }
 # }
-if not DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postdatabase_rktk',
-            'USER': 'jodecode',
-            'PASSWORD': 'E0bg1Q9Kij5lIscfddEYg2VMS11pz2dV',
-            'HOST': 'postdatabase_rktk.oregon-postgres.render.com',
-            'PORT': '5432',
-            'OPTIONS': {
-                'sslmode': 'require', # Render PostgreSQL often requires SSL
-            },
-        }
-    }
 if DEBUG:
     DATABASES = {
         'default': {
@@ -102,6 +90,15 @@ if DEBUG:
             'NAME': BASE_DIR / "db.sqlite3",
         }
     }
+else:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            os.getenv('DATABASE_URL'),  # Ensure you have DATABASE_URL in your .env file
+            conn_max_age=600,  # Optional: Keep connections alive for performance
+            conn_health_checks=True, # Optional: Ensure connection is healthy
+        )
+    }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

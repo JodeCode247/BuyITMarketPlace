@@ -25,5 +25,5 @@ requests-file==2.1.0
 requests-oauthlib==2.0.0
 social-auth-app-django
 sqlparse==0.5.1
-
-
+dj_database_url
+psycopg2-binary
