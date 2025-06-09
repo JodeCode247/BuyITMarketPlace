@@ -23,7 +23,7 @@ python-dotenv==1.0.1
 requests==2.32.3
 requests-file==2.1.0
 requests-oauthlib==2.0.0
-
+social-auth-app-django
 sqlparse==0.5.1
 
 

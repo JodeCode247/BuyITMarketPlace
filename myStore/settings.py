@@ -15,7 +15,7 @@ SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "your-custom-domain.com"] # Add your custom domain if applicable
+ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] # Add your custom domain if applicable
 AUTH_USER_MODEL ="onlineStore.MyUsers"
 
 # Application definition
