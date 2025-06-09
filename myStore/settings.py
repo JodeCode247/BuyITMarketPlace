@@ -13,7 +13,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] # Add your custom domain if applicable
 AUTH_USER_MODEL ="onlineStore.MyUsers"
@@ -81,19 +81,20 @@ WSGI_APPLICATION = 'myStore.wsgi.application'
 #         'HOST': 'Jodecode.mysql.pythonanywhere-services.com',
 #     }
 # }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postdatabase_rktk',
-#         'USER': 'jodecode',
-#         'PASSWORD': 'E0bg1Q9Kij5lIscfddEYg2VMS11pz2dV',
-#         'HOST': 'postdatabase_rktk.oregon-postgres.render.com',
-#         'PORT': '5432',
-#         'OPTIONS': {
-#             'sslmode': 'require', # Render PostgreSQL often requires SSL
-#         },
-#     }
-# }
+if not DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postdatabase_rktk',
+            'USER': 'jodecode',
+            'PASSWORD': 'E0bg1Q9Kij5lIscfddEYg2VMS11pz2dV',
+            'HOST': 'postdatabase_rktk.oregon-postgres.render.com',
+            'PORT': '5432',
+            'OPTIONS': {
+                'sslmode': 'require', # Render PostgreSQL often requires SSL
+            },
+        }
+    }
 if DEBUG:
     DATABASES = {
         'default': {
