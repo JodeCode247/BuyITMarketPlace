@@ -173,11 +173,11 @@
                 <button type="submit">Register</button>
             </div>
         </form>
-
+        {% if debug_check %}       
         <div class="social-login">
             <a href="{% url 'social:begin' 'google-oauth2' %}"><button id="google-register"><i class="fab fa-google"></i></button></a>
-            <button id="facebook-register"><i class="fab fa-facebook-f"></i></button>
         </div>
+        {% endif %}
         </div>
     </div>
 

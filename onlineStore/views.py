@@ -412,6 +412,7 @@ def register_user(request):
     return render (request,'userform.html')
 
 def login_user(request):
+    debug_check = settings.DEBUG
     if request.method=='POST':
         password = request.POST.get('password')
         email = request.POST.get('username')
@@ -432,7 +433,7 @@ def login_user(request):
                     return redirect('onlinestore:home')
                 
             
-    return render (request,'userform.html')
+    return render (request,'userform.html',{"debug_check":debug_check})
 
 
 def logout_user(request):
