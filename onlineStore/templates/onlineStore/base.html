@@ -339,7 +339,9 @@
             {% endif %}
             <ul>
                 <li><a href="{% url 'onlinestore:home' %}">Home</a></li>
+                {% if request.user.is_superuser %}
                 <li><a href="{% url 'onlinestore:create_product' %}">Add product</a></li>
+                {% endif %}
                 {% if request.user.is_authenticated %}
                 <li> <a href="{% url 'onlinestore:orders' %}"><strong>Orders</strong></a></li>
                 <li><a href="{% url 'onlinestore:logout_user' %}">logout</a></li>
