@@ -341,7 +341,7 @@ def confirm_order_payment(request, transaction_id):
     if order.status == 'paid':
         messages.info(request, 'Order already confirmed.')
         return redirect('onlinestore:home')
-    # Verify the payment with Paystack
+    
     response = paystack.verify_payment(transaction_id)
     if response:
         messages.success(request, 'Order payment confirmed successfully!')
