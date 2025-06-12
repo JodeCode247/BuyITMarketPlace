@@ -400,7 +400,7 @@
         <a href="{% url 'onlinestore:home' %}?query=Beauty">Beauty</a>
         <a href="{% url 'onlinestore:home' %}?query=Sports">Sports</a>
         <a href="{% url 'onlinestore:home' %}?query=Health">Health</a>
-        <a href="{% url 'onlinestore:home' %}?query=Grocery">Grocery</a>
+        <a href="{% url 'onlinestore:home' %}?query=Grocery">Games</a>
         <a href="{% url 'onlinestore:home' %}?query=Automotive">Automotive</a>
         <a href="{% url 'onlinestore:home' %}?query=Baby">Baby</a>
         <a href="{% url 'onlinestore:home' %}?query=Pet Supplies">Pet Supplies</a>
@@ -416,10 +416,6 @@
         <a href="{% url 'onlinestore:home' %}?query=Video Games">Video Games</a>
         <a href="{% url 'onlinestore:home' %}?query=Movies">Movies</a>
         <a href="{% url 'onlinestore:home' %}?query=Music">Music</a>
-        <a href="{% url 'onlinestore:home' %}?query=Software">Software</a>
-        <a href="{% url 'onlinestore:home' %}?query=Photography">Photography</a>
-        <a href="{% url 'onlinestore:home' %}?query=Cycling">Cycling</a>
-        <a href="{% url 'onlinestore:home' %}?query=Running">Running</a>
         </form>
         <a href="#">Account</a>
         <a href="#">Wishlist</a>
@@ -539,8 +535,7 @@
             .then(response => response.json())
             .then(data => {
                 window.location.reload();
-                updateBadge(count)
-                updateBadge();
+                updateBadge(count);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -582,9 +577,7 @@
     
 
     
-     function updateCart(action,productId) {
-            // Get the product ID
-        
+     function updateCart(action,productId) {        
             // Send the AJAX request
             fetch('/cart/', {
                 method: 'POST',

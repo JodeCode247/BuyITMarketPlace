@@ -9,14 +9,14 @@ from django.contrib.auth import login,logout
 from django.core.exceptions import FieldError
 from django.utils import timezone
 from django.db.models import Q
-from .handler import upload_to_drive
+from .handler import upload_to_drive, merge_carts
 from django.conf import settings
 from . import paystack
+from django.db import transaction # For atomic operations
 
 
 
 def test_func(user):
-    # Example: Check if the user has a certain permission
         return user.is_authenticated # example.
 
 
@@ -80,13 +80,13 @@ def index(request):
     context = {'products':products}
     return render(request,"onlineStore/index.html",context)
 
+
+@csrf_exempt
 def add_to_cart(request):
     if request.method == 'POST':
         try:      
             data = json.loads(request.body)
-            product_id = data.get('product_id')
-            print(data)
-
+            product_id = int(data.get('product_id'))
             if product_id:
                 product = Product.objects.get(pk=product_id)
                 cart = get_cart(request)
@@ -108,26 +108,28 @@ def add_to_cart(request):
             return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
- 
+
+@csrf_exempt
 def get_cart(request):
-    # ... (your get_cart function)
-    if request.user.is_authenticated:
-        
+    if request.user.is_authenticated:        
         cart, created = Cart.objects.get_or_create(user=request.user)
     else:
         cart_id = request.session.get('cart_id')
-        print(request.user)
+        print(cart_id,'found')
+        print(request.session.items())
         if cart_id:
             try:
                 cart = Cart.objects.get(cart_id=cart_id, user__isnull=True)
             except Cart.DoesNotExist:
+                print('bad create')
                 cart = Cart.objects.create()
         else:
             cart = Cart.objects.create()
             request.session['cart_id'] = str(cart.cart_id)
+            print(request.session.get('cart_id'))
     return cart
 
-@csrf_protect # Enable CSRF protection
+@csrf_protect 
 def viewCart(request):
     cart = get_cart(request)
     
@@ -227,7 +229,7 @@ def products_description(request,id):
 
         return render(request,"onlineStore/product.html",context)
 
-
+@csrf_protect # Enable CSRF protection
 def create_product(request):
     if request.method == 'POST':
         name = request.POST.get('name').title()
@@ -383,7 +385,7 @@ def orders(request):
 
 def register_user(request):
     if request.method=='POST':
-        username = request.POST.get('username').title()
+        username = request.POST.get('username').upper()
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
         email = request.POST.get('email')
@@ -412,27 +414,29 @@ def register_user(request):
     return render (request,'userform.html')
 
 def login_user(request):
-    debug_check = settings.DEBUG
     if request.method=='POST':
         password = request.POST.get('password')
         email = request.POST.get('username')
         if password and email: 
-            print(email)
             try:
                 user=MyUsers.objects.get(email=email)
-
             except MyUsers.DoesNotExist:
-                 messages.success(request,'user not found')
+                 messages.success(request,'User not found')
                  return redirect('onlinestore:login_user')
             
             if user.check_password(password):
-                print(user)
-                if user is not None:
-                    login(request, user, backend='django.contrib.auth.backends.ModelBackend') #specify the backend.
-                    messages.success(request,'you are logged in')
-                    return redirect('onlinestore:home')
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend') #specify the backend.
+                merge_carts(request, user)
+                messages.success(request,'you are logged in')
+                return redirect('onlinestore:home')
+            else:
+                messages.error(request, 'Invalid email or password.') # Generic error for security
+                return redirect('onlinestore:login_user')
+        else:
+            messages.error(request, 'Please provide both email and password.')
+            return redirect('onlinestore:login_user')
                 
-            
+    debug_check = settings.DEBUG   
     return render (request,'userform.html',{"debug_check":debug_check})
 
 
