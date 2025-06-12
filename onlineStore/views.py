@@ -275,8 +275,9 @@ def create_product(request):
     return render(request, 'onlineStore/create_prod.html')
 
 
+# @login_required(login_url='onlinestore:login_user')
+# @user_passes_test(test_func, login_url='onlinestore:login_user') # Ensure the user is authenticated and passes the test_func
 @csrf_protect # Enable CSRF protection
-@user_passes_test(test_func, login_url='onlinestore:login_user')
 def checkout(request):
     if request.method=='POST':
         try:
@@ -319,10 +320,10 @@ def checkout(request):
                     else:
                         return HttpResponse('invalid payment execution')
                 else:
-                    return JsonResponse({'error': 'User not authenticated'}, status=401)
+                    print('User not authenticated')
+                    return JsonResponse({'error': ' Checkout requires Login, Sign up now 📝 '}, status=401)
 
-            else:
-                
+            else:      
                 return JsonResponse({'error': 'Cart is empty Please add items to your cart'}, status=400) # added json response.
 
                             
