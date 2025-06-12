@@ -321,7 +321,7 @@ def checkout(request):
                         return HttpResponse('invalid payment execution')
                 else:
                     print('User not authenticated')
-                    return JsonResponse({'error': ' Checkout requires Login, Sign up now 📝 '}, status=401)
+                    return JsonResponse({'error': ' Sign in to checkout '}, status=401)
 
             else:      
                 return JsonResponse({'error': 'Cart is empty Please add items to your cart'}, status=400) # added json response.
