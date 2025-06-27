@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from .models import Product,MyUsers,Cart,CartItems,Category,Order
+from .models import Product,MyUsers,Cart,CartItems,Category,Order,PackageForm
 import json
 from django.http import JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_protect,csrf_exempt # Import csrf_protect
@@ -182,7 +182,6 @@ def viewCart(request):
 
 @csrf_protect # Enable CSRF protection
 def delete_cart_item(request):
-    print(request.body)
     if request.method=='POST':
         try:
             data = json.loads(request.body)
@@ -252,7 +251,7 @@ def create_product(request):
             category=category_obj,
             price=price,
             description=description,
-            image=None  # Initial image set to None, Google Drive handles it
+            image=None 
         )
 
         if image:
@@ -282,14 +281,28 @@ def checkout(request):
     if request.method=='POST':
         try:
             cart= get_cart(request)
+            data = json.loads(request.body)
+            print(data)
+            name = data.get('name').title()
+            email = data.get('email')
+            phone_number = data.get('phone_number')
+            address = data.get('address')
+            country = data.get('country').title()
+            state = data.get('state').title()
+            description = data.get('description')
+            
             if cart.items_count > 0 and cart.items_count!=0 :
                 if request.user.is_authenticated:
-                    order = Order.objects.create(cart=cart,user=request.user,
-                                                                total_amount=cart.total_price,
-                                                                )            
-                    data = json.loads(request.body)
+                    package = PackageForm.objects.create(customer_name=name,address=address,phone_number=phone_number,
+                                               country=country,state=state,description=description,email=email,)
+                    
+                    order = Order.objects.create(cart=cart,
+                                                 user=request.user,package_detail=package,
+                                                 total_amount=cart.total_price,
+                                                                )
+                                                  
+                    
                     if  data.get('payment_option')=='Paystack':
-                        print('PAYSTACK APPROVED')
                         paystack_data = {'status': 'success',
                                            'public_key' :settings.PAYSTACK_PUBLIC_KEY,
                                             'transaction_id': str(order.order_id),
@@ -297,11 +310,8 @@ def checkout(request):
                                             'email': request.user.email,
                                             'username': request.user.username,
                                             
-                                            
-                                            # Add any other data needed by paystack
-                                        }
+                                            }
                                 
-                                # return redirect('onlinestore:home')
                         return JsonResponse(paystack_data,)
                     
                     elif  data.get('payment_option')=='flutterwave':
@@ -313,7 +323,6 @@ def checkout(request):
                                             'username': request.user.username,
                                             
                                             
-                                            # Add any other data needed by Flutterwave
                                         }
                                 
                         return JsonResponse(data)
@@ -326,13 +335,10 @@ def checkout(request):
             else:      
                 return JsonResponse({'error': 'Cart is empty Please add items to your cart'}, status=400) # added json response.
 
-                            
-                    
+                                              
         except Cart.DoesNotExist:
                 return JsonResponse({'error': 'Cart not found'}, status=404)
-        # except Exception as e:
-        #         return JsonResponse({'error': str(e)}, status=500) # Internal Server Error
-    
+
 
 
 
@@ -394,7 +400,7 @@ def register_user(request):
             try:
                 created = MyUsers.objects.get(email=email)
                 if created:
-                    messages.success(request, 'ALAYE THIS EMAIL IS NO LONGER AVAILABLE ENTER ANOTHER EMAIL')
+                    messages.success(request, ' EMAIL IS NO LONGER AVAILABLE ENTER ANOTHER EMAIL')
                     return redirect('onlinestore:register')
             
             except:

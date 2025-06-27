@@ -91,6 +91,7 @@ class CartItems(models.Model):
     @property
     def sum_price(self):
         return self.product.price * self.quantity
+
     
     
 class Order(models.Model):
@@ -103,6 +104,8 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     currency = models.CharField(max_length=3, default='NGN') # or whatever currency you are using
     payment_method = models.CharField(max_length=20, null=True) # or whatever payment method you are using
+    package_detail =  models.ForeignKey("PackageForm",on_delete=models.CASCADE,related_name='orders',null=True)
+
 
     def __str__(self):
         return str(self.order_id)
@@ -128,6 +131,17 @@ class OrderItem(models.Model):  # New model
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Store the price at the time of order
+
+
+
+class PackageForm(models.Model):
+    customer_name =  models.CharField(max_length=200, ) 
+    email = models.EmailField(_("email address"),)
+    address = models.CharField(max_length=226, )
+    country = models.CharField(max_length=20, ) 
+    state = models.CharField(max_length=20, ) 
+    phone_number =  models.CharField(max_length=11, ) 
+    description = models.TextField(max_length=256, null=True, blank=True)  
 
 
 

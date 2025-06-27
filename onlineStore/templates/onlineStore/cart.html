@@ -1,30 +1,106 @@
 {% extends "onlineStore/base.html" %}
 
-
 {% block content %}
 
 <style>
-    body {
-        font-family: sans-serif;
-        
+    /* Base styles for labels and inputs */
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
     }
 
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.375rem; /* Tailwind's rounded-md */
+        border: 1px solid #ced4da; /* Tailwind's gray-300 */
+        margin-bottom: 1rem;
+    }
+
+    /* Styles for general submit buttons (if not overridden) */
+    button[type="submit"] {
+        background-color: rgb(255, 136, 0); /* Consistent orange */
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem; /* Tailwind's rounded-md */
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button[type="submit"]:hover {
+        background-color: rgb(238, 150, 18); /* Darker orange on hover */
+    }
+
+    /* Styles for the main form container */
+    form {
+        width: 100%; /* Changed from 95% to 100% for better mobile fill */
+        background-color: #ffffff; /* Tailwind's white */
+        padding: 2rem;
+        margin-top: 1rem;
+        border-radius: 0.375rem; /* Tailwind's rounded-md */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Tailwind's shadow-md */
+        box-sizing: border-box; /* Include padding in width calculation */
+    }
+
+    body {
+        font-family: sans-serif;
+    }
+
+    /* Desktop styles: side-by-side layout */
     .checkout-page {
         display: flex;
         justify-content: space-between;
+        flex-wrap: wrap; /* Allow wrapping if content is too wide */
+        gap: 20px; /* Space between flex items */
+        padding: 1rem; /* Basic padding for smaller screens */
+        max-width: 1200px; /* Max width for content */
+        margin: 20px auto; /* Center the main container */
     }
 
     .cart-items {
-        flex: 2;
+        flex: 2; /* Takes 2 parts of available space */
+        min-width: 300px; /* Ensure a minimum width before wrapping */
         border-right: 1px solid #ddd;
         padding-right: 20px;
+        box-sizing: border-box;
     }
 
     .cart-summary {
-        flex: 1;
+        flex: 1; /* Takes 1 part of available space */
+        min-width: 280px; /* Ensure a minimum width before wrapping */
         padding-left: 20px;
+        box-sizing: border-box;
     }
 
+    /* Mobile adjustments: stacking layout */
+    @media (max-width: 768px) {
+        .checkout-page {
+            flex-direction: column; /* Stack items vertically */
+            padding: 1rem; /* Adjust padding for mobile */
+            gap: 0; /* Remove gap when stacked */
+        }
+
+        .cart-items {
+            flex: none; /* Remove flex sizing */
+            width: 100%; /* Take full width */
+            border-right: none; /* Remove right border */
+            padding-right: 0; /* Remove right padding */
+            margin-bottom: 20px; /* Add space between stacked sections */
+        }
+
+        .cart-summary {
+            flex: none; /* Remove flex sizing */
+            width: 100%; /* Take full width */
+            padding-left: 0; /* Remove left padding */
+        }
+    }
+
+    /* Cart item specific styles */
     .cart-item {
         display: flex;
         justify-content: space-between;
@@ -41,7 +117,10 @@
 
     .item-details img {
         width: 80px;
+        height: 80px; /* Added height to ensure consistent sizing */
+        object-fit: cover; /* Ensures image covers area without distortion */
         margin-right: 10px;
+        border-radius: 0.375rem; /* Rounded corners for images */
     }
 
     .item-info {
@@ -51,11 +130,13 @@
     .item-info h3 {
         margin: 0;
         font-size: 16px;
+        color: #333;
     }
 
     .item-info p {
         margin: 5px 0;
         font-size: 12px;
+        color: #666;
     }
 
     .item-actions {
@@ -73,41 +154,61 @@
     .remove-button {
         background: none;
         border: none;
-        color: #f00;
+        color: #dc3545; /* Red color for remove */
         cursor: pointer;
         font-size: 12px;
         padding: 0;
-        margin-bottom: 5px;
+        margin-top: 5px; /* Space from quantity */
     }
 
     .quantity-control {
         display: flex;
         align-items: center;
+        border: 1px solid #ddd; /* Border around quantity controls */
+        border-radius: 0.375rem;
     }
 
     .quantity-control button {
-        background: #f0f0f0;
-        border: 1px solid #ddd;
-        padding: 5px 20px;
+        background: #f8f9fa; /* Light background */
+        border: none; /* No internal border */
+        padding: 5px 10px; /* Reduced padding for compact look */
         cursor: pointer;
-        margin: 0 5px;
         font-size: 14px;
+        border-radius: 0; /* No rounded corners for buttons inside control */
+        display: flex; /* For centering spinner */
+        justify-content: center;
+        align-items: center;
+        gap: 5px; /* Space between text and spinner */
+    }
+    .quantity-control button:first-child { border-top-left-radius: 0.375rem; border-bottom-left-radius: 0.375rem; }
+    .quantity-control button:last-child { border-top-right-radius: 0.375rem; border-bottom-right-radius: 0.375rem; }
+
+
+    .quantity-control span {
+        padding: 5px 10px;
+        font-size: 14px;
+        min-width: 30px; /* Ensure some width for quantity number */
+        text-align: center;
     }
 
     .cart-summary h2 {
         font-size: 18px;
         margin-bottom: 15px;
+        color: #333;
     }
 
     .summary-details {
         display: flex;
         justify-content: space-between;
         margin-bottom: 20px;
+        padding-bottom: 10px; /* Padding for the bottom of summary details */
+        border-bottom: 1px solid #eee; /* Separator for summary details */
     }
 
     .summary-details p {
         margin: 0;
-        font-size: 14px;
+        font-size: 16px;
+        color: #555;
     }
 
     .checkout-button {
@@ -118,18 +219,27 @@
         cursor: pointer;
         width: 100%;
         font-weight: bold;
-        
+        border-radius: 0.375rem;
+        transition: background-color 0.2s ease;
+    }
+    .checkout-button:hover {
+        background-color: darkorange;
     }
 
     /* Adjustments for Discounts */
-    .item-actions p:nth-child(2) {
+    .item-actions p:first-of-type { /* Targeting the discount line */
         color: green; /* Discount color */
+        font-weight: 600; /* Make discount stand out */
     }
 
-    .item-actions p:nth-child(2) span {
+    .item-actions p:first-of-type span { /* Targeting the original price within discount */
         color: red; /* Original price color */
         text-decoration: line-through;
+        margin-left: 5px;
+        font-weight: normal;
     }
+    
+    /* Popup container */
     .popup-container {
         display: none; /* Hidden by default */
         position: fixed;
@@ -147,9 +257,12 @@
         background-color: white;
         padding: 20px;
         border-radius: 8px;
-        width: 300px;
+        width: 90%; /* Responsive width */
+        max-width: 300px; /* Max width for larger screens */
         text-align: center;
+        position: relative; /* For close button positioning */
     }
+    
     .close-button {
         background: none;
         border: none;
@@ -158,6 +271,10 @@
         top: 10px;
         right: 10px;
         font-size: 1.5em;
+        color: #555;
+    }
+    .close-button:hover {
+        color: #333;
     }
 
     .payment-button {
@@ -170,173 +287,384 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    .payment-button:hover {
+        background-color: darkorange;
+    }
+
+    /* Loading Indicator Styles for quantity buttons */
+    .button-spinner {
+        border: 2px solid rgba(0, 0, 0, 0.3); /* Darker border for light buttons */
+        border-top: 2px solid #555; /* Darker spinner color */
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        animation: spin 1s linear infinite;
+        display: none; /* Hidden by default */
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
-    <main class="checkout-page">
-        <section class="cart-items">
-            <h2>Cart ({{cart_items.count}})</h2>
-            {% if cart_items.count == 0 %}
-            
-            <h2>CART EMPTY SHOP MORE,   OGA WHY YOU NEVER BUY FROM US</h2>
-           
-            {% endif %}
-            {% for item in cart_items %}
-            
-            
-            <div class="cart-item">
-                <div class="item-details">
-                    <img src="{{item.product.image_url}}"alt="image">
-                    <div class="item-info">
-                        <a href='{% url "onlinestore:products_description" item.product.id %}'><h3>{{item.product.name}}</h3></a>
-                        <p>Variation: BLACK</p>
-                        <p>Few units left</p>
-                        <p>BUY.IT EXPRESS</p>
-                    </div>
-                </div>
-                <div class="item-actions">
-                    <p>₦{{item.product.price}} discount</p>
-                     <p>₦{{item.sum_price}}</p>
-                    <button onclick="delete_cart_item({{item.product.id}})" class="remove-button">Remove</button>
-                    <div class="quantity-control">
 
-                        
-       
-                            <input type="hidden" id="action" name="action"  >
-                            <button onclick="updateCart('decrement',{{item.product.id}})">-</button>
-                       
-                        
-                           <span>{{item.quantity}}</span> 
-                        
-                           <button  onclick="updateCart('increment',{{item.product.id}})">+</button>
-                        
-                  
-                    </div>
+<main class="checkout-page">
+    <section class="cart-items">
+        <h2>Cart ({{cart_items.count}})</h2>
+        {% if cart_items.count == 0 %}
+        
+        <h2>CART EMPTY! SHOP MORE, OGA WHY YOU NEVER BUY FROM US?</h2>
+        
+        {% endif %}
+        {% for item in cart_items %}
+        
+        <div class="cart-item" data-product-id="{{ item.product.id }}"> {# Added data-product-id #}
+            <div class="item-details">
+                <img src="{{item.product.image_url}}" alt="{{item.product.name}}">
+                <div class="item-info">
+                    <a href='{% url "onlinestore:products_description" item.product.id %}'><h3>{{item.product.name}}</h3></a>
+                    <p>Variation: BLACK</p>
+                    <p>Few units left</p>
+                    <p>BUY.IT EXPRESS</p>
                 </div>
             </div>
-            {% endfor %}
-  
-            <button onclick='clearCart()' class="checkout-button">Clear cart</button>
-        </section>
-
-        <section class="cart-summary">
-            <h2>CART SUMMARY</h2>
-            <div class="summary-details">
-                <p>Subtotal</p>
-                <p>₦  {{total_price}}</p>
+            <div class="item-actions">
+                <p>₦{{item.product.price}} discount</p>
+                <p class="item-sum-price">₦{{item.sum_price}}</p> {# Added class for easier update #}
+                <button onclick="delete_cart_item({{item.product.id}})" class="remove-button">Remove</button>
+                <div class="quantity-control">
+                    <input type="hidden" id="action" name="action">
+                    <button class="decrement-button" data-product-id="{{item.product.id}}">- <span class="button-spinner"></span></button> {# Added class and spinner #}
+                    <span class="item-quantity">{{item.quantity}}</span> {# Added class for easier update #}
+                    <button class="increment-button" data-product-id="{{item.product.id}}">+ <span class="button-spinner"></span></button> {# Added class and spinner #}
+                </div>
             </div>
-            <button id="payment-options-button" class="checkout-button">Checkout {% if total_price %}(₦ {{total_price}}){% endif %} </button>
-        </section>
-    </main>
-
-    <div class="popup-container" id="payment-popup">
-        <div class="popup-content">
-            <button class="close-button" id="close-popup">&times;</button>
-            <h2>Choose Payment Method</h2>                  
-            <button class="payment-button" id="paystack-pay">Paystack</button>
-            <button class="payment-button" id="card-pay">Credit Card (not availabe yet)</button>
         </div>
+        {% endfor %}
+
+        <button onclick='clearCart()' class="checkout-button">Clear cart</button>
+    </section>
+
+    <section class="cart-summary">
+        <h2>CART SUMMARY</h2>
+        <div class="summary-details">
+            <p>Subtotal</p>
+            <p id="total-price-display">₦ {{total_price}}</p> {# Added ID for easier update #}
+        </div>
+
+        <div class="summary-details">
+            <form method="post" id="checkout-form"> {# Added an ID to the form #}
+                {% csrf_token %}
+
+                <div>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required> {# Changed type to email #}
+                </div>
+
+                <div>
+                    <label for="phone_number">Phone Number:</label>
+                    <input type="tel" id="phone_number" name="phone_number" required pattern="[0-9]{10,15}"> {# Changed type to tel and added pattern #}
+                </div>
+
+
+                <div>
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" name="address" required> <!-- Changed id to 'address' -->
+                </div>
+
+                <div>
+                    <label for="state">State:</label>
+                    <input type="text" id="state" name="state" required> <!-- Changed id to 'state' -->
+                </div>
+                <div>
+                    <label for="country">Country:</label>
+                    <input type="text" id="country" name="Country" required> <!-- Changed id to 'country' -->
+                </div>
+
+                <div>
+                    <label for="description">Any thing you like us to know about your package</label>
+                    <textarea id="description" name="description" rows="5" placeholder="(Optional)"></textarea>
+                </div>
+
+                <button type="submit" id="payment-options-button" class="checkout-button">
+                    Checkout {% if total_price %}(₦ {{total_price}}){% endif %}
+                </button>
+            </form>
+        </div> 
+    </section>
+</main>
+
+<div class="popup-container" id="payment-popup">
+    <div class="popup-content">
+        <button class="close-button" id="close-popup">&times;</button>
+        <h2>Choose Payment Method</h2>
+        <button class="payment-button" id="paystack-pay">Paystack</button> {# This is the button #}
+        <button class="payment-button" id="card-pay">Credit Card (not availabe yet)</button>
     </div>
+</div>
 
 <script>
-        
-        const popupContainer = document.getElementById('payment-popup');
-        const closeButton = document.getElementById('close-popup');
-        const paystackButton = document.getElementById('paystack-pay');
-        const cardButton = document.getElementById('card-pay');
+    // Assuming showAlert, hideLoading, showLoading, fetchCartCount, getCookie functions are available in base.html
+    const popupContainer = document.getElementById('payment-popup');
+    const closeButton = document.getElementById('close-popup');
+    const paystackButton = document.getElementById('paystack-pay');
+    const cardButton = document.getElementById('card-pay');
+    const checkoutForm = document.getElementById('checkout-form');
+    const totalPriceDisplay = document.getElementById('total-price-display');
 
-        document.getElementById('payment-options-button').addEventListener('click', () => {
-            popupContainer.style.display = 'flex';
-        });
-
-        closeButton.addEventListener('click', () => {
-     
-            popupContainer.style.display = 'none';
-
-        });
-        
-
-        paystackButton.addEventListener('click', () => {
-            // Handle Paystack payment logic
-            console.log("Paystack payment initiated");
-            fetch('/initialize_payment/', { 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'), // CSRF protection
-                },
-                body: JSON.stringify({payment_option: "Paystack",
-                          }), // Send any necessary data
-            })
-            .then(response => response.json())
-            
-            .then(data => {
-                
-                console.log('Response from server:', data); 
-                if (data.status === 'success') {
-                    let handler = PaystackPop.setup({
-                        key: data.public_key, // Your Paystack public key
-                        email: data.email,
-                        amount: data.amount*100, 
-                        currency: 'NGN',
-                        ref: data.transaction_id, // Transaction reference
-                        onClose: function() {
-                            alert('Window closed.');
-                        },
-                        callback: function(response) {
-                            // Redirect to a success page or perform other actions
-                           window.location.href = '/confirm_order_payment/' + data.transaction_id; // Redirect to success page.
-                        }
-                    });
-                    handler.openIframe();
-                } else {
-                    alert( data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-
-          // Add your paystack payment code here
-        popupContainer.style.display = 'none';
-
-        });
-    
-
-        
-
-        cardButton.addEventListener('click', () => {
-            // Handle Credit Card payment logic.
-            console.log("Credit Card payment initiated");
-            // Add your card payment code here
-            popupContainer.style.display = 'none';
-
-        });
-
-        // Close the popup if the user clicks outside the content
-        window.addEventListener('click', (event) => {
-            if (event.target === popupContainer) {
-                popupContainer.style.display = 'none';
+    // Function to check if all required form fields are filled
+    function areFormFieldsFilled() {
+        const requiredInputs = checkoutForm.querySelectorAll('input[required], textarea[required]');
+        for (const input of requiredInputs) {
+            if (input.value.trim() === '') {
+                return false;
             }
+        }
+        return true;
+    }
+
+    document.getElementById('payment-options-button').addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default form submission initially
+
+        if (!areFormFieldsFilled()) {
+            showAlert('Please fill in all required address details before proceeding to checkout.', 'error'); // Using showAlert
+            return;
+        }
+        popupContainer.style.display = 'flex';
+    });
+
+    closeButton.addEventListener('click', () => {
+        popupContainer.style.display = 'none';
+    });
+    
+    paystackButton.addEventListener('click', () => {
+        showLoading(); // Show global loading indicator
+        const formData = {
+            name: document.getElementById('name').value,
+            address: document.getElementById('address').value,
+            state: document.getElementById('state').value,
+            country: document.getElementById('country').value,
+            email: document.getElementById('email').value,
+            phone_number: document.getElementById('phone_number').value,
+            description: document.getElementById('description').value,
+            payment_option: "Paystack"
+        };
+
+        fetch('/initialize_payment/', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading(); // Hide global loading indicator
+            if (data.status === 'success') {
+                let handler = PaystackPop.setup({
+                    key: data.public_key,
+                    email: data.email,
+                    amount: data.amount * 100,
+                    currency: 'NGN',
+                    ref: data.transaction_id,
+                    onClose: function() {
+                        showAlert('Payment window closed.', 'info');
+                    },
+                    callback: function(response) {
+                        window.location.href = '/confirm_order_payment/' + data.transaction_id;
+                    }
+                });
+                handler.openIframe();
+            } else {
+                showAlert(data.error || "An error occurred during payment initialization.", 'error');
+            }
+        })
+        .catch(error => {
+            hideLoading(); // Hide global loading indicator
+            console.error('Error:', error);
+            showAlert('Failed to initialize payment. Please try again.', 'error');
         });
 
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+        popupContainer.style.display = 'none';
+    });
+    
+    cardButton.addEventListener('click', () => {
+        showAlert("Credit Card payment is not available yet.", 'info');
+        popupContainer.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === popupContainer) {
+            popupContainer.style.display = 'none';
+        }
+    });
+
+    // Event listeners for increment/decrement buttons
+    document.querySelectorAll('.increment-button, .decrement-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const action = this.classList.contains('increment-button') ? 'increment' : 'decrement';
+            const buttonElement = this;
+            const spinner = this.querySelector('.button-spinner');
+            const quantitySpan = buttonElement.parentElement.querySelector('.item-quantity');
+            const itemSumPriceDisplay = buttonElement.closest('.cart-item').querySelector('.item-sum-price');
+
+
+            // Show spinner and disable button
+            buttonElement.disabled = true;
+            if (spinner) spinner.style.display = 'inline-block';
+            
+            // Call the updated updateCart function
+            updateCart(action, productId, buttonElement, spinner, quantitySpan, itemSumPriceDisplay);
+        });
+    });
+
+    // Override existing functions from base.html to perform dynamic updates
+    function updateCart(action, productId, buttonElement, spinner, quantitySpan, itemSumPriceDisplay) {
+        fetch('/cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                action: action,
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Re-enable button and hide spinner
+            buttonElement.disabled = false;
+            if (spinner) spinner.style.display = 'none';
+
+            if (data.status === 'success') {
+                showAlert(data.message || 'Cart updated successfully!', 'success');
+                fetchCartCount(); // Update global cart badge
+
+                // Update UI for the specific item
+                quantitySpan.textContent = data.new_quantity;
+                itemSumPriceDisplay.textContent = `₦${data.new_item_sum_price}`; // Update item's sum price
+
+                // Update total price in summary
+                totalPriceDisplay.textContent = `₦ ${data.new_total_price}`;
+
+                // If quantity becomes 0, remove the item element from DOM
+                if (data.new_quantity === 0) {
+                    const cartItemElement = buttonElement.closest('.cart-item');
+                    if (cartItemElement) {
+                        cartItemElement.remove();
+                        // Check if cart is now empty and display message
+                        if (document.querySelectorAll('.cart-item').length === 0) {
+                            document.querySelector('.cart-items').innerHTML += '<h2>CART EMPTY! SHOP MORE, OGA WHY YOU NEVER BUY FROM US?</h2>';
+                        }
                     }
                 }
+
+            } else {
+                showAlert(data.message || 'Error updating cart.', 'error');
             }
-            return cookieValue;
-        }
-    </script>
+        })
+        .catch(error => {
+            // Re-enable button and hide spinner on error
+            buttonElement.disabled = false;
+            if (spinner) spinner.style.display = 'none';
 
-    <script src="https://checkout.flutterwave.com/v3.js"></script>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
+            console.error('Error:', error);
+            showAlert('Failed to update cart. Please try again.', 'error');
+        });
+    }
 
+    function delete_cart_item(productId) {
+        showLoading(); // Show global loading indicator
+        fetch('/delete_cart_item/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading(); // Hide global loading indicator
+            if (data.status === 'success') {
+                showAlert('Item removed from cart!', 'success');
+                fetchCartCount(); // Update global cart badge
+
+                // Remove the item from the DOM
+                const itemElement = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+                if (itemElement) {
+                    itemElement.remove();
+                    // Update total price if provided in response
+                    if (data.new_total_price !== undefined) {
+                        totalPriceDisplay.textContent = `₦ ${data.new_total_price}`;
+                    }
+                    // Check if cart is now empty and display message
+                    if (document.querySelectorAll('.cart-item').length === 0) {
+                        document.querySelector('.cart-items').innerHTML += '<h2>CART EMPTY! SHOP MORE, OGA WHY YOU NEVER BUY FROM US?</h2>';
+                    }
+                }
+            } else {
+                showAlert(data.message || 'Error removing item.', 'error');
+            }
+        })
+        .catch(error => {
+            hideLoading(); // Hide global loading indicator
+            console.error('Error:', error);
+            showAlert('Failed to remove item. Please try again.', 'error');
+        });
+    }
+
+    function clearCart() {
+        showLoading(); // Show global loading indicator
+        fetch('/clear_cart/', { 
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json', 
+            'X-CSRFToken': getCookie('csrftoken'), 
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            hideLoading(); // Hide global loading indicator
+            showAlert('Cart cleared successfully!', 'success');
+            fetchCartCount(); // Update global cart badge
+
+            // Clear cart items from DOM
+            const cartItemsSection = document.querySelector('.cart-items');
+            if (cartItemsSection) {
+                cartItemsSection.innerHTML = '<h2>Cart (0)</h2><h2>CART EMPTY! SHOP MORE, OGA WHY YOU NEVER BUY FROM US?</h2>';
+            }
+            // Reset total price
+            totalPriceDisplay.textContent = '₦ 0.00';
+
+        })
+        .catch(error => {
+            hideLoading(); // Hide global loading indicator
+            console.error('Error clearing cart:', error);
+            showAlert('Error clearing cart. Please try again.', 'error');
+        });
+    }
+
+</script>
+
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
 
 {% endblock content %}

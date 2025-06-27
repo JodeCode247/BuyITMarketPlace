@@ -1,37 +1,29 @@
 {% extends "onlineStore/base.html" %}
 
-    
-    
-            
-            {% block content %}
-            <section class="products">
-                <h2>
-                    <form action="" method="get">
-                        <span onclick="toggleMenu()"><strong>☰</strong></span>
-                        <input class="bar" type="text" placeholder="Search products.." name='query'>
-                        <button><i class="fas fa-shopping-cart"></i></button>
-                </form>
-                </h2>
-                <div class="product-grid">
-                    {% for product in products %}               
-                    
-                    <div class="product">
-                        <img src="{{product.image_url}}" alt="item {{product.id}}">
-                        <a href='{% url "onlinestore:products_description" product.id %}'><h4>{{product.name}}</h4></a>
-                        <p>₦{{product.price}}</p>
-                        <button onclick="addItem({{product.id}})" >Add to Cart</button>
-                    </div>
-                    
-                    {% endfor %}
-                
-                </div>
-            </section>
-         
-            {% endblock content %}
-    
-
-
- 
-    
-   
-    
+{% block content %}
+<div class="products">
+    <div class="search-bar">
+        <form action="" method="get">
+            <span onclick="toggleMenu()"><strong>☰</strong></span>
+            <input class="bar" type="text" placeholder="Search products.." name='query'>
+            <button type="submit" class="btn"><i class="fas fa-search"></i></button> {# Using search icon for clarity #}
+        </form>
+    </div>
+    <h2>Browse Products</h2>
+    <div class="product-grid">
+        {% for product in products %} 
+        <div class="product">
+            <img src="{{product.image_url}}" alt="item {{product.id}}">
+            <div class="product-info"> {# Added div for consistent styling #}
+                <a href='{% url "onlinestore:products_description" product.id %}'><h3>{{product.name}}</h3></a>
+                <p>₦{{product.price}}</p>
+            </div>
+            {# Updated button to use class and data-attribute for JS handling #}
+            <button class="add-to-cart-button" data-product-id="{{product.id}}">
+                Add to Cart <span class="button-spinner" style="display: none;"></span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

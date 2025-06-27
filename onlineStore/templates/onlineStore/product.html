@@ -1,280 +1,638 @@
 {% extends "onlineStore/base.html" %}
+
 {% block content %}
-    <div class="product-container">
-        <div class="product-gallery">
-            <div class="main-image">
-                <img src="{{product.image_url}}" alt="Product Main Image">
-            </div>
-            <div class="thumbnail-images">
-                <img src="{{product.image_url}}" alt="Thumbnail 1">
-                <img src="{{product.image_url}}" alt="Thumbnail 4">
-            </div>
+<style>
+    :root {
+        --primary-color: orange;
+        --secondary-color: #f4f4f4;
+        --text-color: #333;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif; /* Using Inter font from base.html */
+        background-color: var(--secondary-color);
+        line-height: 1.6;
+        color: var(--text-color);
+    }
+
+    .product-container {
+        display: flex;
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        max-width: 1200px;
+        margin: 50px auto;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .product-gallery {
+        flex: 1;
+        min-width: 300px; /* Ensure gallery takes reasonable space before wrapping */
+        padding: 20px;
+    }
+
+    .main-image img {
+        width: 100%;
+        height: auto;
+        max-height: 400px; /* Max height for main image */
+        object-fit: contain; /* Ensures entire image is visible */
+        border-radius: 10px;
+    }
+
+    .thumbnail-images {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+        gap: 10px; /* Space between thumbnails */
+    }
+
+    .thumbnail-images img {
+        width: calc(25% - 7.5px); /* Adjusted for 4 images with gap */
+        height: 80px; /* Fixed height for thumbnails */
+        object-fit: cover;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: opacity 0.3s ease, border 0.3s ease;
+        border: 2px solid transparent; /* Default border */
+    }
+
+    .thumbnail-images img.active-thumbnail,
+    .thumbnail-images img:hover {
+        opacity: 0.9;
+        border-color: var(--primary-color); /* Highlight active/hovered thumbnail */
+    }
+
+    .product-details {
+        flex: 1;
+        min-width: 300px; /* Ensure details take reasonable space before wrapping */
+        padding: 30px;
+    }
+
+    .product-title {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: var(--text-color);
+        word-break: break-word; /* Allow long words to break */
+    }
+
+    .product-rating {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stars {
+        color: var(--primary-color);
+        margin-right: 10px;
+    }
+
+    .rating-count {
+        color: #777;
+    }
+
+    .product-price {
+        display: flex;
+        flex-wrap: wrap; /* Allow price elements to wrap */
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 10px; /* Space between price elements */
+    }
+
+    .current-price {
+        font-size: 1.8rem;
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+        color: #888;
+        font-size: 1rem;
+    }
+
+    .discount-percentage {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .product-description h3 {
+        margin-bottom: 10px;
+        color: var(--text-color);
+        font-size: 1.2rem;
+    }
+
+    .product-description p {
+        margin-bottom: 20px;
+        font-size: 1rem;
+        color: #555;
+    }
+
+    .product-options {
+        margin-bottom: 20px;
+    }
+
+    .color-selection h3, .quantity-selector h3 {
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+        color: var(--text-color);
+    }
+
+    .color-choices {
+        display: flex;
+        gap: 10px;
+    }
+
+    .color-option {
+        width: 35px; /* Slightly larger color option */
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .color-option.active {
+        border-color: var(--primary-color);
+        transform: scale(1.1); /* Slight zoom on active */
+    }
+
+    .color-option[data-color="black"] { background-color: black; }
+    .color-option[data-color="white"] { background-color: white; border: 1px solid #ddd; }
+    .color-option[data-color="blue"] { background-color: blue; }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: fit-content; /* Shrink to content */
+    }
+
+    .qty-btn {
+        background-color: var(--primary-color); /* Orange for quantity buttons */
+        color: white;
+        border: none;
+        padding: 8px 12px; /* Adjusted padding */
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex; /* For spinner */
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        transition: background-color 0.2s ease;
+    }
+
+    .qty-btn:hover {
+        background-color: darkorange;
+    }
+
+    .qty-btn.minus {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+    }
+
+    .qty-btn.plus {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+
+    .qty-input {
+        width: 60px; /* Wider input for quantity */
+        text-align: center;
+        padding: 8px 0;
+        border: none; /* Remove internal border */
+        font-size: 1.1rem;
+        -moz-appearance: textfield; /* Hide arrows for Firefox */
+    }
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .product-actions {
+        display: flex;
+        flex-wrap: wrap; /* Allow buttons to wrap */
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .add-to-cart-button, .buy-now { /* Corrected selector for Add to Cart button */
+        flex: 1; /* Distribute space evenly */
+        min-width: 150px; /* Ensure buttons don't get too small */
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        display: flex; /* For spinner */
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .add-to-cart-button { /* Corrected selector for Add to Cart button */
+        background-color: var(--primary-color); /* Explicitly using orange */
+        color: white;
+    }
+
+    .add-to-cart-button:hover { /* Corrected selector for Add to Cart button */
+        background-color: darkorange;
+        transform: translateY(-2px);
+    }
+
+    .buy-now {
+        background-color: #f0f0f0;
+        color: var(--text-color);
+    }
+
+    .buy-now:hover {
+        background-color: #e0e0e0;
+        transform: translateY(-2px);
+    }
+
+    .product-features h3 {
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+        color: var(--text-color);
+    }
+
+    .product-features ul {
+        list-style-type: disc;
+        padding-left: 20px;
+        color: #555;
+    }
+
+    .product-features li {
+        margin-bottom: 5px;
+    }
+
+    /* Loading Spinner for buttons */
+    .button-spinner {
+        border: 2px solid rgba(255, 255, 255, 0.3); /* For white text buttons */
+        border-top: 2px solid #fff;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        animation: spin 1s linear infinite;
+        display: none; /* Hidden by default */
+    }
+
+    /* Spinner for quantity control buttons (different color due to light background) */
+    .quantity-control .button-spinner {
+        border: 2px solid rgba(0, 0, 0, 0.3);
+        border-top: 2px solid #555;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .product-container {
+            flex-direction: column;
+            margin: 20px;
+            padding: 0; /* Remove padding from container, move to children */
+        }
+
+        .product-gallery, .product-details {
+            flex: none;
+            width: 100%;
+            padding: 20px; /* Apply padding directly to sections */
+        }
+
+        .main-image img {
+            max-height: 300px;
+        }
+
+        .thumbnail-images img {
+            width: calc(25% - 7.5px); /* Still 4 columns */
+            height: 60px; /* Smaller thumbnails */
+        }
+
+        .product-title {
+            font-size: 1.8rem;
+        }
+
+        .current-price {
+            font-size: 1.5rem;
+        }
+
+        .add-to-cart-button, .buy-now { /* Corrected selector */
+            min-width: unset; /* Allow shrink on tiny screens */
+            flex: 1 1 100%; /* Stack buttons on very small screens */
+        }
+    }
+
+    @media (max-width: 480px) {
+        .product-container {
+            margin: 10px;
+        }
+        .product-details {
+            padding: 15px;
+        }
+        .product-title {
+            font-size: 1.5rem;
+        }
+        .current-price {
+            font-size: 1.3rem;
+        }
+        .thumbnail-images img {
+            width: calc(33.33% - 6.66px); /* 3 columns on very small screens */
+        }
+    }
+</style>
+
+<div class="product-container">
+    <div class="product-gallery">
+        <div class="main-image">
+            <img src="{{product.image_url}}" alt="Product Main Image" id="main-product-image">
         </div>
-
-        <div class="product-details">
-            <h1 class="product-title">{{product.name}}</h1>
-            
-            <div class="product-rating">
-                <div class="stars">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="far fa-star"></i>
-                </div>
-                <span class="rating-count">(124 reviews)</span>
-            </div>
-
-            <div class="product-price">
-                <span class="current-price">₦{{product.price}}</span>
-                <span class="original-price">$199.99</span>
-                <span class="discount-percentage">35% OFF</span>
-            </div>
-
-            <div class="product-description">
-                <h3>Product Description</h3>
-                <p>{{product.description}}</p>
-            </div>
-
-            <div class="product-options">
-                <div class="color-selection">
-                    <h3>Color</h3>
-                    <div class="color-choices">
-                        <div class="color-option active" data-color="black"></div>
-                        <div class="color-option" data-color="white"></div>
-                        <div class="color-option" data-color="blue"></div>
-                    </div>
-                </div>
-
-                <div class="quantity-selector">
-                    <h3>Quantity</h3>
-                    <div class="quantity-control">
-                        <button onclick="updateCart('decrement',{{product.id}})" class="qty-btn minus">-</button>
-                        <input type="number" class="qty-input" {% if product_cart_item %} value="{{product_cart_item.quantity}}" {% else %} value =0 {% endif %}  min="1" >
-                        <button onclick="updateCart('increment',{{product.id}})"  class="qty-btn plus">+</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="product-actions">
-                <button onclick="addItem({{product.id}})"  class="add-to-cart">
-                    <i class="fas fa-shopping-cart"></i> Add to Cart
-                </button>
-                <button class="buy-now">Buy Now</button>
-            </div>
-
-            <div class="product-features">
-                <h3>Key Features</h3>
-                <ul>
-                    <li>Wireless Bluetooth 5.0</li>
-                    <li>Noise Cancellation</li>
-                    <li>20-Hour Battery Life</li>
-                    <li>Comfortable Over-Ear Design</li>
-                </ul>
-            </div>
+        <div class="thumbnail-images">
+            {# Using same image for thumbnails for demonstration, replace with actual thumbnail URLs if available #}
+            <img src="{{product.image_url}}" alt="Thumbnail 1" class="active-thumbnail">
+            <img src="https://placehold.co/100x100/A0A0A0/FFFFFF?text=Thumb+2" alt="Thumbnail 2">
+            <img src="https://placehold.co/100x100/B0B0B0/FFFFFF?text=Thumb+3" alt="Thumbnail 3">
+            <img src="https://placehold.co/100x100/C0C0C0/FFFFFF?text=Thumb+4" alt="Thumbnail 4">
         </div>
     </div>
 
-<style>
-:root {
-    --primary-color: orange;
-    --secondary-color: #f4f4f4;
-    --text-color: #333;
-}
+    <div class="product-details">
+        <h1 class="product-title">{{product.name}}</h1>
+        
+        <div class="product-rating">
+            <div class="stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i>
+            </div>
+            <span class="rating-count">(124 reviews)</span>
+        </div>
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+        <div class="product-price">
+            <span class="current-price">₦{{product.price}}</span>
+            {# Updated to use product.original_price. Ensure this is passed from your Django view. #}
+            <span class="original-price">₦{{product.original_price}}</span>
+            <span class="discount-percentage">35% OFF</span>
+        </div>
 
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: var(--secondary-color);
-    line-height: 1.6;
-    color: var(--text-color);
-}
+        <div class="product-description">
+            <h3>Product Description</h3>
+            <p>{{product.description}}</p>
+        </div>
 
-.product-container {
-    display: flex;
-    max-width: 1200px;
-    margin: 50px auto;
-    background-color: white;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    border-radius: 10px;
-    overflow: hidden;
-}
+        <div class="product-options">
+            <div class="color-selection">
+                <h3>Color</h3>
+                <div class="color-choices">
+                    <div class="color-option active" data-color="black"></div>
+                    <div class="color-option" data-color="white"></div>
+                    <div class="color-option" data-color="blue"></div>
+                </div>
+            </div>
 
-.product-gallery {
-    flex: 1;
-    padding: 20px;
-}
+            <div class="quantity-selector">
+                <h3>Quantity</h3>
+                <div class="quantity-control">
+                    {# Changed to use classes for event listeners, added spinner #}
+                    <button class="qty-btn minus-qty" data-product-id="{{product.id}}">- <span class="button-spinner"></span></button>
+                    <input type="number" class="qty-input" id="product-quantity-{{product.id}}" 
+                        {% if product_cart_item %} value="{{product_cart_item.quantity}}" {% else %} value="0" {% endif %} min="0"> {# Changed min to 0 #}
+                    {# Changed to use classes for event listeners, added spinner #}
+                    <button class="qty-btn plus-qty" data-product-id="{{product.id}}">+ <span class="button-spinner"></span></button>
+                </div>
+            </div>
+        </div>
 
-.main-image img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-    border-radius: 10px;
-}
+        <div class="product-actions">
+            {# Updated button to use class and data-attribute for JS handling, added spinner #}
+            <button class="add-to-cart-button" id="add-to-cart-btn" data-product-id="{{product.id}}">
+                <i class="fas fa-shopping-cart"></i> Add to Cart <span class="button-spinner" style="display: none;"></span>
+            </button>
+            <button class="buy-now">Buy Now</button>
+        </div>
 
-.thumbnail-images {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-}
+        <div class="product-features">
+            <h3>Key Features</h3>
+            <ul>
+                <li>Wireless Bluetooth 5.0</li>
+                <li>Noise Cancellation</li>
+                <li>20-Hour Battery Life</li>
+                <li>Comfortable Over-Ear Design</li>
+            </ul>
+        </div>
+    </div>
+</div>
 
-.thumbnail-images img {
-    width: 22%;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: opacity 0.3s ease;
-}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const productId = {{ product.id }};
+        const productQuantityInput = document.getElementById(`product-quantity-${productId}`);
 
-.thumbnail-images img:hover {
-    opacity: 0.7;
-}
+        // Add a check to ensure the input element is found
+        if (!productQuantityInput) {
+            console.error(`Error: Quantity input element with ID 'product-quantity-${productId}' not found.`);
+            return; // Exit if element not found to prevent further errors
+        }
 
-.product-details {
-    flex: 1;
-    padding: 30px;
-}
+        const addToCartButton = document.getElementById('add-to-cart-btn');
+        const addToCartButtonSpinner = addToCartButton.querySelector('.button-spinner');
 
-.product-title {
-    font-size: 2rem;
-    margin-bottom: 15px;
-    color: var(--text-color);
-}
+        // Store original button content to revert to it
+        const originalAddToCartButtonContent = addToCartButton.innerHTML;
 
-.product-rating {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-}
+        // Initial state of "Add to Cart" button based on current quantity
+        function updateAddToCartButtonState() {
+            if (parseInt(productQuantityInput.value) > 0) {
+                // Keep the original content but update text
+                addToCartButton.innerHTML = `<i class="fas fa-shopping-cart"></i> Added to Cart <span class="button-spinner" style="display: none;"></span>`;
+                addToCartButton.classList.add('added'); 
+            } else {
+                addToCartButton.innerHTML = originalAddToCartButtonContent; // Revert to initial "Add to Cart"
+                addToCartButton.classList.remove('added');
+            }
+            addToCartButton.disabled = false; // Ensure it's enabled after state update
+            addToCartButtonSpinner.style.display = 'none';
+        }
 
-.stars {
-    color: var(--primary-color);
-    margin-right: 10px;
-}
+        // --- Thumbnail Image Gallery Logic ---
+        const mainProductImage = document.getElementById('main-product-image');
+        const thumbnailImages = document.querySelectorAll('.thumbnail-images img');
 
-.rating-count {
-    color: #777;
-}
+        thumbnailImages.forEach(thumbnail => {
+            thumbnail.addEventListener('click', () => {
+                // Remove active class from all thumbnails
+                thumbnailImages.forEach(img => img.classList.remove('active-thumbnail'));
+                // Add active class to the clicked thumbnail
+                thumbnail.classList.add('active-thumbnail');
+                // Change main image source
+                mainProductImage.src = thumbnail.src;
+            });
+        });
 
-.product-price {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-}
+        // --- Add to Cart Button Click Handler ---
+        addToCartButton.addEventListener('click', function() {
+            // Check if product quantity is 0, if so, set to 1 for adding to cart
+            if (parseInt(productQuantityInput.value) === 0) {
+                productQuantityInput.value = 1;
+            }
+            const quantityToAdd = parseInt(productQuantityInput.value);
 
-.current-price {
-    font-size: 1.8rem;
-    color: var(--primary-color);
-    font-weight: bold;
-    margin-right: 15px;
-}
+            // Disable button and show spinner (without changing text)
+            addToCartButton.disabled = true;
+            if (addToCartButtonSpinner) {
+               addToCartButtonSpinner.style.display = 'inline-block';
+            }
 
-.original-price {
-    text-decoration: line-through;
-    color: #888;
-    margin-right: 15px;
-}
+            // Call the modified addItem function
+            addItemForProductPage(productId, quantityToAdd, addToCartButton, addToCartButtonSpinner);
+        });
 
-.discount-percentage {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-}
+        // --- Quantity Control Buttons Logic ---
+        document.querySelectorAll('.qty-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                let currentQuantity = parseInt(productQuantityInput.value);
+                console.log('Initial quantity:', currentQuantity); // Debugging log
+                const action = this.classList.contains('plus-qty') ? 'increment' : 'decrement';
+                const buttonElement = this;
+                const spinner = buttonElement.querySelector('.button-spinner');
 
-.product-description p {
-    margin-bottom: 20px;
-}
+                // Disable button and show spinner
+                buttonElement.disabled = true;
+                if (spinner) spinner.style.display = 'inline-block';
 
-.color-selection, .quantity-selector {
-    margin-bottom: 20px;
-}
+                if (action === 'increment') {
+                    currentQuantity++;
+                } else if (action === 'decrement' && currentQuantity > 0) {
+                    currentQuantity--;
+                }
 
-.color-choices {
-    display: flex;
-}
+                // If quantity goes to 0 or less, ensure it's handled as a "remove"
+                if (currentQuantity < 0) currentQuantity = 0; // Prevent negative quantities
+                console.log('Calculated new quantity before sending:', currentQuantity, 'Action:', action); // Debugging log
 
-.color-option {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    margin-right: 10px;
-    cursor: pointer;
-    border: 2px solid transparent;
-}
+                // Update the input field immediately for visual feedback
+                productQuantityInput.value = currentQuantity;
 
-.color-option.active {
-    border-color: var(--primary-color);
-}
+                // Call the modified updateCart function
+                updateCartForProductPage(action, productId, currentQuantity, buttonElement, spinner);
+            });
+        });
 
-.color-option[data-color="black"] { background-color: black; }
-.color-option[data-color="white"] { background-color: white; border: 1px solid #ddd; }
-.color-option[data-color="blue"] { background-color: blue; }
+        // --- Overridden/Adapted Functions for this page ---
+        // These functions are designed to specifically update the UI of THIS product page.
+        // They assume showAlert, hideLoading, showLoading, fetchCartCount, getCookie are available in base.html.
 
-.quantity-control {
-    display: flex;
-    align-items: center;
-}
+        function addItemForProductPage(productId, quantity, buttonElement, spinnerElement) {
+            console.log('Sending Add to Cart to backend:', { product_id: productId, quantity: quantity }); // Debugging log
+            fetch('/add_to_cart/', { // Your Django URL for adding to cart
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: quantity // Send the desired quantity
+                })
+            })
+            .then(response => {
+                console.log('Raw response (Add to Cart):', response); // Debugging log
+                return response.json();
+            })
+            .then(data => {
+                console.log('Parsed response data (Add to Cart):', data); // Debugging log
+                if (data.status === 'success') {
+                    showAlert(data.message || 'Product added to cart!', 'success');
+                    fetchCartCount(); // Update global cart badge
+                    // Update input with actual quantity, as backend might adjust it (e.g., stock limits)
+                    productQuantityInput.value = data.new_quantity || quantity; 
+                } else {
+                    showAlert(data.message || 'Error adding product to cart.', 'error');
+                }
+                // Ensure button is re-enabled and spinner hidden on completion/error
+                buttonElement.disabled = false;
+                if (spinnerElement) spinnerElement.style.display = 'none';
+                updateAddToCartButtonState(); // Update button text based on final quantity
+            })
+            .catch(error => {
+                // Ensure button is re-enabled and spinner hidden on error
+                buttonElement.disabled = false;
+                if (spinnerElement) spinnerElement.style.display = 'none';
+                console.error('Error (Add to Cart):', error);
+                showAlert('Failed to add product to cart. Please try again.', 'error');
+                updateAddToCartButtonState(); // Revert button state on error
+            });
+        }
 
-.qty-btn {
-    background-color: var(--secondary-color);
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-}
+        function updateCartForProductPage(action, productId, newQuantity, buttonElement, spinnerElement) {
+            console.log('Sending Update Cart to backend:', { action, product_id: productId, quantity: newQuantity }); // Debugging log
+            fetch('/cart/', { // Your Django URL for updating cart
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    action: action,
+                    product_id: productId,
+                    quantity: newQuantity // Send the new desired quantity
+                })
+            })
+            .then(response => {
+                console.log('Raw response (Update Cart):', response); // Debugging log
+                return response.json();
+            })
+            .then(data => {
+                console.log('Parsed response data (Update Cart):', data); // Debugging log
+                buttonElement.disabled = false;
+                if (spinnerElement) spinnerElement.style.display = 'none';
 
-.qty-input {
-    width: 50px;
-    text-align: center;
-    margin: 0 10px;
-}
+                if (data.status === 'success') {
+                    showAlert(data.message || 'Cart updated successfully!', 'success');
+                    fetchCartCount(); // Update global cart badge
+                    productQuantityInput.value = data.new_quantity; // Update input with actual quantity from backend
+                    updateAddToCartButtonState(); // Update Add to Cart button based on new quantity
+                    
+                    // If the item quantity is reduced to 0 and the item is removed from cart,
+                    // the product page's quantity input should reflect this.
+                    if (data.new_quantity === 0) {
+                        productQuantityInput.value = 0;
+                    }
 
-.product-actions {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-}
+                } else {
+                    showAlert(data.message || 'Error updating cart.', 'error');
+                    // Revert quantity if update failed (consider storing original quantity before fetch)
+                }
+            })
+            .catch(error => {
+                buttonElement.disabled = false;
+                if (spinnerElement) spinnerElement.style.display = 'none';
+                console.error('Error:', error);
+                showAlert('Failed to update cart. Please try again.', 'error');
+            });
+        }
 
-.add-to-cart, .buy-now {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.add-to-cart {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.buy-now {
-    background-color: #f0f0f0;
-    color: var(--text-color);
-}
-
-.product-features ul {
-    list-style-type: disc;
-    padding-left: 20px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .product-container {
-        flex-direction: column;
-        margin: 20px;
-    }
-
-    .product-gallery, .product-details {
-        flex: none;
-        width: 100%;
-    }
-}
-</style>
+        // Call this on load to set initial button state
+        updateAddToCartButtonState();
+    });
+</script>
 
 {% endblock %}
