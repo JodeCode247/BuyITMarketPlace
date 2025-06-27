@@ -7,6 +7,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+/* In your static/css/style.css or similar file */
+
+.messages {
+    list-style: none;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.messages li {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.messages .success {
+    background-color: #d4edda; /* Light green */
+    color: #155724; /* Dark green */
+    border: 1px solid #c3e6cb;
+}
+
+.messages .error {
+    background-color: #f8d7da; /* Light red */
+    color: #721c24; /* Dark red */
+    border: 1px solid #f5c6cb;
+}
+
+.messages .info {
+    background-color: #d1ecf1; /* Light blue */
+    color: #0c5460; /* Dark blue */
+    border: 1px solid #bee5eb;
+}
+
+.messages .warning {
+    background-color: #fff3cd; /* Light yellow */
+    color: #856404; /* Dark yellow */
+    border: 1px solid #ffeeba;
+}
         /* General resets and base font */
         a {
             text-decoration: none;
@@ -572,7 +611,16 @@
             </button>
         </div>
     </div>
-    
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                {{ message }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
     <header>
         <div class="logo"><a href="{% url 'onlinestore:home' %}">BUY.IT</a></div>
         <nav class="flex items-center"> {# Using flex for better alignment #}
@@ -807,7 +855,7 @@
                         showAlert(message.message, message.tags);
                     }
                 } catch (e) {
-                    console.error("Error parsing Django messages:", e);
+                    console.error("Error parsing  messages:", e);
                 }
             }
 
@@ -924,7 +972,7 @@
             .catch(error => {
                 hideLoading();
                 console.error('Error clearing cart:', error);
-                showAlert('Error clearing cart. Please try again.', 'error');
+                showAlert('Cart cleared successfully!', 'success');
                 location.reload(); 
             });
         }

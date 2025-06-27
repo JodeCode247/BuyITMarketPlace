@@ -41,35 +41,9 @@ def index(request):
             if products.exists():
                 context = {'products': products}
                 return render(request, 'onlineStore/index.html', context)
-            
-            elif not products.exists():
-                # Split the query into words and search for each word
-                query= query.split(' ')
-                count = len(query)
-                if count:
-                    for i in range(count):
-                        query=query[i].strip()
-                        loop_count = len(query)
-                        while loop_count > 2:
-                            for i in range(loop_count):
-                                query=query[0:loop_count].strip()
-                                products = Product.objects.filter(Q(name__icontains=query)
-                                                | Q(price__icontains=query)
-                                                | Q(category__name__icontains=query)
-                                                ).values()
-                                    
-                                if products.exists():
-                                    context = {'products': products}
-                                    return render(request, 'onlineStore/index.html', context)
-                                else:
-                                    loop_count-=1
-                    if not products.exists():
-                        messages.error(request, 'No products found matching your search.')
-                        return redirect('onlinestore:home')
-                
-            
         
             else:
+                print("ITEM NOT FOUND")
                 messages.error(request, 'No products found matching your search.')
                 return redirect('onlinestore:home')
             
