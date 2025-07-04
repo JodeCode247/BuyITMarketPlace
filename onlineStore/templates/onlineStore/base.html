@@ -898,7 +898,7 @@
                 }
 
                 if (data.status === 'success') {
-                    showAlert('Product added to cart!', 'success');
+                    showAlert( data.message || 'Product added to cart!', 'success');
                     fetchCartCount();
                 } else {
                     showAlert(data.message || 'Error adding product to cart.', 'error');

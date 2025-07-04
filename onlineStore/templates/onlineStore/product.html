@@ -410,6 +410,7 @@
 
             <div class="quantity-selector">
                 <h3>Quantity</h3>
+          {% if product.number_available %}
                 <div class="quantity-control">
                     {# Changed to use classes for event listeners, added spinner #}
                     <button class="qty-btn minus-qty" data-product-id="{{product.id}}">- <span class="button-spinner"></span></button>
@@ -428,6 +429,12 @@
             </button>
             <button class="buy-now">Buy Now</button>
         </div>
+        {% else %}
+           {# Updated button to use class and data-attribute for JS handling, added spinner #}
+            <button class="add-to-cart-button" id="add-to-cart-btn" disabled data-product-id="{{product.id}}">
+                <i class="fas fa-shopping-cart"></i> Product Sold-out <span class="button-spinner" ></span>
+            </button>
+        {% endif %}
 
         <div class="product-features">
             <h3>Key Features</h3>

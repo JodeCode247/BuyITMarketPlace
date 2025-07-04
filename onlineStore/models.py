@@ -35,9 +35,10 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=100)
     category =models.ForeignKey(Category,related_name="products", on_delete=models.DO_NOTHING)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10 , decimal_places=2)
     description = models.TextField(null=True,blank=True)
-    rating = models.IntegerField(default=0,blank=True)
+    number_available = models.IntegerField(default=0,blank=True)
+    rating = models.FloatField(default=0,blank=True)
     number_of_reviews =  models.IntegerField(default=0,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -113,22 +114,28 @@ class Order(models.Model):
     def confirm_payment(self,transaction_id):
        with transaction.atomic():
             cart_items = self.cart.cartItems.all() # get cart items from the order
+            try:
+                for cart_item in cart_items:
+                    if cart_item.quantity > 0:
+                        OrderItem.objects.create(order=self, product=cart_item.product,product_name=cart_item.product.name,quantity=cart_item.quantity, price=cart_item.product.price)
+                        product = cart_item.product
+                        product.number_available -= cart_item.quantity
+                        product.save()
+                    else:
+                        cart_item.delete()
 
-            for cart_item in cart_items:
-                if cart_item.quantity > 0:
-                    OrderItem.objects.create(order=self, product=cart_item.product, quantity=cart_item.quantity, price=cart_item.product.price)
-                else:
-                    cart_item.delete()
-            # Clear the cart after confirming payment
-            cart_items.delete()
-            self.status = 'paid'
-            self.transaction_reference=transaction_id
-            self.save()
-            return True
+                cart_items.delete()
+                self.status = 'paid'
+                self.transaction_reference=transaction_id
+                self.save()
+                return True
+            except:
+                return False
             
 class OrderItem(models.Model):  # New model
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product_name = models.CharField(max_length=255,blank=True)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Store the price at the time of order
 

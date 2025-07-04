@@ -17,11 +17,20 @@
             <div class="product-info"> {# Added div for consistent styling #}
                 <a href='{% url "onlinestore:products_description" product.id %}'><h3>{{product.name}}</h3></a>
                 <p>₦{{product.price}}</p>
+                <p>QTY - {{product.number_available}}</p>
+                
+                
             </div>
             {# Updated button to use class and data-attribute for JS handling #}
-            <button class="add-to-cart-button" data-product-id="{{product.id}}">
-                Add to Cart <span class="button-spinner" style="display: none;"></span>
+            {% if product.number_available %}
+            <button class="add-to-cart-button" data-product-id="{{product.id}}">            
+                Add to Cart <span class="button-spinner" style="display: none;"></span>               
             </button>
+            {% else %}
+            <button class="add-to-cart-button" disabled data-product-id="{{product.id}}">            
+                 Product Sold-out  <span class="button-spinner"></span>               
+            </button>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

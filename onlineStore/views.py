@@ -13,8 +13,7 @@ from .handler import upload_to_drive, merge_carts
 from django.conf import settings
 from . import paystack
 from django.db import transaction # For atomic operations
-
-
+ 
 
 def test_func(user):
         return user.is_authenticated # example.
@@ -63,16 +62,24 @@ def add_to_cart(request):
             product_id = int(data.get('product_id'))
             if product_id:
                 product = Product.objects.get(pk=product_id)
-                cart = get_cart(request)
-                print(cart.cart_id)
+                if product.number_available:
+                    cart = get_cart(request)
+                    print(cart.cart_id)
 
-                cart_item, created = CartItems.objects.get_or_create(cart=cart, product=product)
+                    cart_item, created = CartItems.objects.get_or_create(cart=cart, product=product)
 
-                if not created:
-                    cart_item.quantity += 1
-                    cart_item.save()
+                    if not created:
+                        if cart_item.quantity <= cart_item.product.number_available :
+                            if cart_item.product.number_available == cart_item.quantity:
+                                return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
+                            cart_item.quantity+=1
+                            cart_item.save()
+                            return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
+                        else:
+                            return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
 
-                return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
+                    return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
+                return JsonResponse({'status': 'error', 'message': 'Bad operation'})
             else:
                 return JsonResponse({'status': 'error', 'message': 'Product ID missing'}, status=400)
 
@@ -109,7 +116,6 @@ def viewCart(request):
     
     if request.method=='POST':
         try:  
-            print('action occuers')    
             data = json.loads(request.body)
             product_id = data.get('product_id')
             action = data.get('action')
@@ -130,9 +136,14 @@ def viewCart(request):
 
 
             elif action=='increment':
-                cart_item.quantity+=1
-                cart_item.save()
-                return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
+                if cart_item.quantity <= cart_item.product.number_available :
+                    if cart_item.product.number_available == cart_item.quantity:
+                        return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
+                    cart_item.quantity+=1
+                    cart_item.save()
+                    return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
             
             else:
                 return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
@@ -210,8 +221,10 @@ def create_product(request):
         price = request.POST.get('price')
         description = request.POST.get('description')
         image = request.FILES.get('image')
+        number_available = request.POST.get('number_available')
 
-        if not all([name, category_name, price, description]):
+
+        if not all([name, category_name, price, description,number_available]):
             messages.error(request, 'Please fill all fields.')
             return render(request, 'onlineStore/create_prod.html', {'name': name, 'category': category_name, 'price': price, 'description': description})
 
@@ -225,7 +238,8 @@ def create_product(request):
             category=category_obj,
             price=price,
             description=description,
-            image=None 
+            image=None ,
+            number_available=number_available
         )
 
         if image:
@@ -321,13 +335,13 @@ def confirm_order_payment(request, transaction_id):
     if order.status == 'paid':
         messages.info(request, 'Order already confirmed.')
         return redirect('onlinestore:home')
-    
+   
     response = paystack.verify_payment(transaction_id)
     if response:
         messages.success(request, 'Order payment confirmed successfully!')
         return redirect('onlinestore:home')
     else:
-        messages.error(request, 'Order payment confirmation failed.')
+        messages.error(request, 'Order payment confirmation failed. , if debited send us this Order ID '+ '"' +str(transaction_id)+ '"'+' for refund')
         return redirect('onlinestore:home')
 
 @login_required(login_url='onlinestore:login_user')

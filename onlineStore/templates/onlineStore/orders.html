@@ -366,7 +366,8 @@
                         <ul class="order-items" style="display: none;">
                             {% for item in order.order_items.all %}
                                 <li>
-                                    <span>{{ item.product }} x {{ item.quantity }}</span>
+                                    <span>{% if item.product_name %}                        
+                                    {{ item.product_name }} {% else %}  {{item.product}} {% endif %} ×{{ item.quantity }}</span>
                                     <span>₦{{ item.price }}</span>
                                 </li>
                             {% endfor %}
