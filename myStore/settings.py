@@ -16,10 +16,11 @@ SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True' # Convert DEBUG to boolean
 
+
+
 ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] # Add your custom domain if applicable
 AUTH_USER_MODEL ="onlineStore.MyUsers"
 
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -68,20 +69,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myStore.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'Jodecode$default',
-#         'USER': 'Jodecode',
-#         'PASSWORD': 'databasepass123',
-#         'HOST': 'Jodecode.mysql.pythonanywhere-services.com',
-#     }
-# }
 if DEBUG:
     DATABASES = {
         'default': {
@@ -89,7 +78,8 @@ if DEBUG:
             'NAME': BASE_DIR / "db.sqlite3",
         }
     }
-else:
+
+if not DEBUG:
     DATABASES = {
         'default': dj_database_url.parse(
             os.getenv('DATABASE_URL'),  # Ensure you have DATABASE_URL in your .env file

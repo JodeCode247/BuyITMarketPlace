@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 from .models import Product,MyUsers,Cart,CartItems,Category,Order,PackageForm
 import json
 from django.http import JsonResponse,HttpResponse
-from django.views.decorators.csrf import csrf_protect,csrf_exempt # Import csrf_protect
+from django.views.decorators.csrf import csrf_protect,csrf_exempt
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib import messages
 from django.contrib.auth import login,logout
@@ -12,7 +12,7 @@ from django.db.models import Q
 from .handler import upload_to_drive, merge_carts
 from django.conf import settings
 from . import paystack
-from django.db import transaction # For atomic operations
+from django.db import transaction
  
 
 def test_func(user):
@@ -27,6 +27,7 @@ def get_cart_count(request):
     else:
         count = 0
     return JsonResponse({'count': count})
+
 
 def index(request):
     if request.method == 'GET':
@@ -46,9 +47,11 @@ def index(request):
                 messages.error(request, 'No products found matching your search.')
                 return redirect('onlinestore:home')
             
-
-   
-    products = Product.objects.only('name')
+    try:
+        products = Product.objects.only('name')
+    except:
+       return redirect('onlinestore:login_user')
+        
     
     context = {'products':products}
     return render(request,"onlineStore/index.html",context)
@@ -408,6 +411,20 @@ def register_user(request):
 
     return render (request,'userform.html')
 
+
+@csrf_protect # Enable CSRF protection
+def clear_cart(request):
+    if request.method == 'POST':
+        cart = get_cart(request)
+        if cart:
+            cart_items = cart.cartItems.all()
+            cart_items.delete()
+            return redirect('onlinestore:cart') # Redirect to the cart page
+        else:
+            return redirect('onlinestore:home') #Cart not found, redirect to home.
+    return redirect('onlinestore:cart') #if not a post request, redirect to cart
+
+
 def login_user(request):
     if request.method=='POST':
         password = request.POST.get('password')
@@ -439,16 +456,3 @@ def logout_user(request):
     logout(request)
     messages.success(request,'you are logged out')
     return redirect('onlinestore:home')
-
-
-@csrf_protect # Enable CSRF protection
-def clear_cart(request):
-    if request.method == 'POST':
-        cart = get_cart(request)
-        if cart:
-            cart_items = cart.cartItems.all()
-            cart_items.delete()
-            return redirect('onlinestore:cart') # Redirect to the cart page
-        else:
-            return redirect('onlinestore:home') #Cart not found, redirect to home.
-    return redirect('onlinestore:cart') #if not a post request, redirect to cart
