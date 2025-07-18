@@ -326,7 +326,7 @@
                 <div class="item-info">
                     <a href='{% url "onlinestore:products_description" item.product.id %}'><h3>{{item.product.name}}</h3></a>
                     <p>Variation: BLACK</p>
-                    <p>Few units left</p>
+                    <p>{{item.product.number_available}} units left</p>
                     <p>BUY.IT EXPRESS</p>
                 </div>
             </div>

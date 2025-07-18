@@ -389,8 +389,7 @@
         <div class="product-price">
             <span class="current-price">₦{{product.price}}</span>
             {# Updated to use product.original_price. Ensure this is passed from your Django view. #}
-            <span class="original-price">₦{{product.original_price}}</span>
-            <span class="discount-percentage">35% OFF</span>
+            <span class="discount-percentage">{{product.number_available}} unit left</span>
         </div>
 
         <div class="product-description">
@@ -417,7 +416,7 @@
                     <input type="number" class="qty-input" id="product-quantity-{{product.id}}" 
                         {% if product_cart_item %} value="{{product_cart_item.quantity}}" {% else %} value="0" {% endif %} min="0"> {# Changed min to 0 #}
                     {# Changed to use classes for event listeners, added spinner #}
-                    <button class="qty-btn plus-qty" data-product-id="{{product.id}}">+ <span class="button-spinner"></span></button>
+                    <button class="qty-btn plus-qty" data-product-id="{{product.id}}">+<span class="button-spinner"></span></button>
                 </div>
             </div>
         </div>

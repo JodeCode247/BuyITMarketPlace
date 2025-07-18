@@ -15,7 +15,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True' # Convert DEBUG to boolean
-
+# DEBUG = False
 
 
 ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] # Add your custom domain if applicable

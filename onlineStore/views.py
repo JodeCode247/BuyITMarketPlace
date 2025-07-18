@@ -49,10 +49,13 @@ def index(request):
             
     try:
         products = Product.objects.only('name')
+
     except:
-       return redirect('onlinestore:login_user')
-        
+       return HttpResponse("error")
+    #    return redirect('onlinestore:login_user')
     
+        
+
     context = {'products':products}
     return render(request,"onlineStore/index.html",context)
 
@@ -332,7 +335,7 @@ def checkout(request):
 
 
 
-
+@login_required(login_url='onlinestore:login_user')
 def confirm_order_payment(request, transaction_id):
     order = Order.objects.get(order_id=transaction_id)
     if order.status == 'paid':
