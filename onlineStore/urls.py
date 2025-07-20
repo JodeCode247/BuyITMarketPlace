@@ -6,7 +6,7 @@ app_name = "onlinestore"
 urlpatterns = [
     
     path('',views.index,name='home'),
-    
+    path('ela/', views.ela_upload_view, name='ela_upload'),
     path('add_to_cart/',views.add_to_cart,name='add_to_cart'),
     path('cart/',views.viewCart,name='cart'),
     path('get_cart_count/',views.get_cart_count,name='get_cart_count'),
