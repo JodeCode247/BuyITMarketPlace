@@ -82,7 +82,7 @@ if DEBUG:
 if not DEBUG:
     DATABASES = {
         'default': dj_database_url.parse(
-            'postgresql://mydb_h28m_user:mPLuPjLPZ0KFz5Fq2rouizyqW4n4fewh@dpg-d1s4smali9vc739hqgrg-a.oregon-postgres.render.com/mydb_h28m',  # Ensure you have DATABASE_URL in your .env file
+            os.getenv('DATABASE_URL'),  # Ensure you have DATABASE_URL in your .env file
             conn_max_age=600,  # Optional: Keep connections alive for performance
             conn_health_checks=True, # Optional: Ensure connection is healthy
         )
