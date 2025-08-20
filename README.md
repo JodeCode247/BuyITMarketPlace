@@ -2,7 +2,7 @@
 
 Welcome to the BuyIt repository!
 This project is an evolving online marketplace platform where users can browse, buy, and sell products.
-It’s built with modern web technologies (Django + GraphQL + Vanilla JS) and designed for scalability.
+It’s built with modern web technologies (Django  + Vanilla JS) and designed for scalability.
 
 🎯 Project Overview
 
