@@ -1,4 +1,4 @@
-# 🛒 BuyIt: An Open-Source Marketplace Web Application
+# 🛒 BuyIt: An Open Marketplace Web Application
 
 Welcome to the BuyIt repository!
 This project is an evolving online marketplace platform where users can browse, buy, and sell products.
