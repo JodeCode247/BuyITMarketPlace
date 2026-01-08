@@ -27,3 +27,4 @@ social-auth-app-django
 sqlparse==0.5.1
 dj_database_url
 psycopg2-binary
+djangorestframework 
