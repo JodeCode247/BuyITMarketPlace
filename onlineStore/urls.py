@@ -1,5 +1,5 @@
 from django.urls import path,include
-from . import views , serializer
+from . import views 
 
 app_name = "onlinestore"
 
@@ -15,8 +15,6 @@ urlpatterns = [
     path('orders/',views.orders,name='orders'),
     path('products_create/', views.create_product, name='create_product'),
     
-    path('product_to_json/api/', serializer.obj_json,name='api_call'),
-    path('api_call/', serializer.outgoing_api_call,name='outgoing_api_call'),
 
     path('confirm_order_payment/<str:transaction_id>',views.confirm_order_payment,name='confirm_order_payment'),
     
