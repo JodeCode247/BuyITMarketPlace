@@ -28,3 +28,4 @@ sqlparse==0.5.1
 dj_database_url
 psycopg2-binary
 djangorestframework 
+whitenoise==6.8.2
