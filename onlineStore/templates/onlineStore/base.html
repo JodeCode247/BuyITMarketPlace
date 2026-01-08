@@ -978,35 +978,32 @@
         }
     
         function updateCart(action, productId) {
-            showLoading();
-            fetch('/cart/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    action: action,
-                    product_id: productId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                if (data.status === 'success') {
-                    showAlert(data.message || 'Cart updated successfully!', 'success');
-                    fetchCartCount();
-                    window.location.reload();
-                } else {
-                    showAlert(data.message || 'Error updating cart.', 'error');
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                console.error('Error:', error);
-                showAlert('Failed to update cart. Please try again.', 'error');
-            });
+    fetch('/cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            action: action,
+            product_id: productId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            fetchCartCount();
+            window.location.reload(); // simple & safe
+        } else {
+            showAlert(data.message || 'Error updating cart.', 'error');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Failed to update cart. Please try again.', 'error');
+    });
+}
+
     </script>
 </body>
 </html>

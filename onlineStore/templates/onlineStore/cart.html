@@ -3,312 +3,295 @@
 {% block content %}
 
 <style>
-    /* Base styles for labels and inputs */
-    label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: bold;
-    }
+:root {
+    --primary: #ff8c00;
+    --primary-dark: #e67600;
+    --bg: #f7f7f9;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --radius: 14px;
+}
 
-    input[type="text"],
-    input[type="number"],
-    select,
-    textarea {
-        width: 100%;
-        padding: 0.5rem;
-        border-radius: 0.375rem; /* Tailwind's rounded-md */
-        border: 1px solid #ced4da; /* Tailwind's gray-300 */
-        margin-bottom: 1rem;
-    }
+* {
+    box-sizing: border-box;
+}
 
-    /* Styles for general submit buttons (if not overridden) */
-    button[type="submit"] {
-        background-color: rgb(255, 136, 0); /* Consistent orange */
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem; /* Tailwind's rounded-md */
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
 
-    button[type="submit"]:hover {
-        background-color: rgb(238, 150, 18); /* Darker orange on hover */
-    }
+/* ======================
+   PAGE LAYOUT
+====================== */
+.checkout-page {
+    max-width: 1200px;
+    margin: 40px auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 32px;
+    padding: 16px;
+}
 
-    /* Styles for the main form container */
-    form {
-        width: 100%; /* Changed from 95% to 100% for better mobile fill */
-        background-color: #ffffff; /* Tailwind's white */
-        padding: 2rem;
-        margin-top: 1rem;
-        border-radius: 0.375rem; /* Tailwind's rounded-md */
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Tailwind's shadow-md */
-        box-sizing: border-box; /* Include padding in width calculation */
-    }
+/* ======================
+   CARDS
+====================== */
+.cart-items,
+.cart-summary {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+}
 
-    body {
-        font-family: sans-serif;
-    }
+/* ======================
+   HEADINGS
+====================== */
+h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
 
-    /* Desktop styles: side-by-side layout */
+/* ======================
+   CART ITEMS
+====================== */
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.item-details {
+    display: flex;
+    gap: 12px;
+}
+
+.item-details img {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.item-info h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.item-info p {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.item-actions {
+    text-align: right;
+    min-width: 120px;
+}
+
+.item-actions p {
+    font-size: 0.85rem;
+}
+
+.item-actions p:first-child {
+    color: green;
+    font-weight: 600;
+}
+
+.item-actions p:first-child span {
+    text-decoration: line-through;
+    color: red;
+}
+
+/* ======================
+   QUANTITY CONTROLS
+====================== */
+.quantity-control {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.quantity-control button {
+    background: #f3f4f6;
+    border: none;
+    padding: 6px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.quantity-control span {
+    min-width: 32px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* ======================
+   BUTTONS
+====================== */
+button {
+    font-family: inherit;
+}
+
+.checkout-button,
+.payment-button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.checkout-button:hover,
+.payment-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.remove-button {
+    background: none;
+    border: none;
+    color: #dc2626;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-top: 6px;
+}
+
+/* ======================
+   SUMMARY
+====================== */
+.summary-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+/* ======================
+   FORM
+====================== */
+form {
+    display: grid;
+    gap: 12px;
+}
+
+label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* ======================
+   POPUP
+====================== */
+.popup-container {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 340px;
+    text-align: center;
+}
+
+.close-button {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* ======================
+   SPINNER
+====================== */
+.button-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ======================
+   RESPONSIVE
+====================== */
+@media (max-width: 900px) {
     .checkout-page {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap; /* Allow wrapping if content is too wide */
-        gap: 20px; /* Space between flex items */
-        padding: 1rem; /* Basic padding for smaller screens */
-        max-width: 1200px; /* Max width for content */
-        margin: 20px auto; /* Center the main container */
+        grid-template-columns: 1fr;
     }
 
-    .cart-items {
-        flex: 2; /* Takes 2 parts of available space */
-        min-width: 300px; /* Ensure a minimum width before wrapping */
-        border-right: 1px solid #ddd;
-        padding-right: 20px;
-        box-sizing: border-box;
-    }
-
-    .cart-summary {
-        flex: 1; /* Takes 1 part of available space */
-        min-width: 280px; /* Ensure a minimum width before wrapping */
-        padding-left: 20px;
-        box-sizing: border-box;
-    }
-
-    /* Mobile adjustments: stacking layout */
-    @media (max-width: 768px) {
-        .checkout-page {
-            flex-direction: column; /* Stack items vertically */
-            padding: 1rem; /* Adjust padding for mobile */
-            gap: 0; /* Remove gap when stacked */
-        }
-
-        .cart-items {
-            flex: none; /* Remove flex sizing */
-            width: 100%; /* Take full width */
-            border-right: none; /* Remove right border */
-            padding-right: 0; /* Remove right padding */
-            margin-bottom: 20px; /* Add space between stacked sections */
-        }
-
-        .cart-summary {
-            flex: none; /* Remove flex sizing */
-            width: 100%; /* Take full width */
-            padding-left: 0; /* Remove left padding */
-        }
-    }
-
-    /* Cart item specific styles */
     .cart-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #ddd;
-        padding: 10px 0;
-        margin-bottom: 15px; /* Space between items */
-    }
-
-    .item-details {
-        display: flex;
+        flex-direction: column;
         align-items: flex-start;
     }
 
-    .item-details img {
-        width: 80px;
-        height: 80px; /* Added height to ensure consistent sizing */
-        object-fit: cover; /* Ensures image covers area without distortion */
-        margin-right: 10px;
-        border-radius: 0.375rem; /* Rounded corners for images */
-    }
-
-    .item-info {
-        flex-grow: 1;
-    }
-
-    .item-info h3 {
-        margin: 0;
-        font-size: 16px;
-        color: #333;
-    }
-
-    .item-info p {
-        margin: 5px 0;
-        font-size: 12px;
-        color: #666;
-    }
-
     .item-actions {
-        text-align: right;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-    }
-
-    .item-actions p {
-        margin: 2px 0;
-        font-size: 12px;
-    }
-
-    .remove-button {
-        background: none;
-        border: none;
-        color: #dc3545; /* Red color for remove */
-        cursor: pointer;
-        font-size: 12px;
-        padding: 0;
-        margin-top: 5px; /* Space from quantity */
-    }
-
-    .quantity-control {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ddd; /* Border around quantity controls */
-        border-radius: 0.375rem;
-    }
-
-    .quantity-control button {
-        background: #f8f9fa; /* Light background */
-        border: none; /* No internal border */
-        padding: 5px 10px; /* Reduced padding for compact look */
-        cursor: pointer;
-        font-size: 14px;
-        border-radius: 0; /* No rounded corners for buttons inside control */
-        display: flex; /* For centering spinner */
-        justify-content: center;
-        align-items: center;
-        gap: 5px; /* Space between text and spinner */
-    }
-    .quantity-control button:first-child { border-top-left-radius: 0.375rem; border-bottom-left-radius: 0.375rem; }
-    .quantity-control button:last-child { border-top-right-radius: 0.375rem; border-bottom-right-radius: 0.375rem; }
-
-
-    .quantity-control span {
-        padding: 5px 10px;
-        font-size: 14px;
-        min-width: 30px; /* Ensure some width for quantity number */
-        text-align: center;
-    }
-
-    .cart-summary h2 {
-        font-size: 18px;
-        margin-bottom: 15px;
-        color: #333;
-    }
-
-    .summary-details {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 20px;
-        padding-bottom: 10px; /* Padding for the bottom of summary details */
-        border-bottom: 1px solid #eee; /* Separator for summary details */
-    }
-
-    .summary-details p {
-        margin: 0;
-        font-size: 16px;
-        color: #555;
-    }
-
-    .checkout-button {
-        background-color: orange;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
         width: 100%;
-        font-weight: bold;
-        border-radius: 0.375rem;
-        transition: background-color 0.2s ease;
+        text-align: left;
     }
-    .checkout-button:hover {
-        background-color: darkorange;
+}
+
+@media (max-width: 480px) {
+    .item-details img {
+        width: 64px;
+        height: 64px;
     }
 
-    /* Adjustments for Discounts */
-    .item-actions p:first-of-type { /* Targeting the discount line */
-        color: green; /* Discount color */
-        font-weight: 600; /* Make discount stand out */
+    h2 {
+        font-size: 1.1rem;
     }
-
-    .item-actions p:first-of-type span { /* Targeting the original price within discount */
-        color: red; /* Original price color */
-        text-decoration: line-through;
-        margin-left: 5px;
-        font-weight: normal;
-    }
-    
-    /* Popup container */
-    .popup-container {
-        display: none; /* Hidden by default */
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-        justify-content: center;
-        align-items: center;
-        z-index: 1000; /* Ensure it's on top */
-    }
-
-    .popup-content {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        width: 90%; /* Responsive width */
-        max-width: 300px; /* Max width for larger screens */
-        text-align: center;
-        position: relative; /* For close button positioning */
-    }
-    
-    .close-button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 1.5em;
-        color: #555;
-    }
-    .close-button:hover {
-        color: #333;
-    }
-
-    .payment-button {
-        display: block;
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 10px;
-        background-color:rgb(255, 153, 0); /* Example button color */
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-    .payment-button:hover {
-        background-color: darkorange;
-    }
-
-    /* Loading Indicator Styles for quantity buttons */
-    .button-spinner {
-        border: 2px solid rgba(0, 0, 0, 0.3); /* Darker border for light buttons */
-        border-top: 2px solid #555; /* Darker spinner color */
-        border-radius: 50%;
-        width: 18px;
-        height: 18px;
-        animation: spin 1s linear infinite;
-        display: none; /* Hidden by default */
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+}
 </style>
+
 
 <main class="checkout-page">
     <section class="cart-items">
@@ -336,9 +319,10 @@
                 <button onclick="delete_cart_item({{item.product.id}})" class="remove-button">Remove</button>
                 <div class="quantity-control">
                     <input type="hidden" id="action" name="action">
-                    <button class="decrement-button" data-product-id="{{item.product.id}}">- <span class="button-spinner"></span></button> {# Added class and spinner #}
-                    <span class="item-quantity">{{item.quantity}}</span> {# Added class for easier update #}
-                    <button class="increment-button" data-product-id="{{item.product.id}}">+ <span class="button-spinner"></span></button> {# Added class and spinner #}
+                    <button class="decrement-button" data-product-id="{{item.product.id}}">-</button>
+                    <span class="item-quantity">{{item.quantity}}</span>
+                    <button class="increment-button" data-product-id="{{item.product.id}}">+</button>
+
                 </div>
             </div>
         </div>
@@ -519,17 +503,17 @@
             const itemSumPriceDisplay = buttonElement.closest('.cart-item').querySelector('.item-sum-price');
 
 
-            // Show spinner and disable button
             buttonElement.disabled = true;
-            if (spinner) spinner.style.display = 'inline-block';
+
             
             // Call the updated updateCart function
-            updateCart(action, productId, buttonElement, spinner, quantitySpan, itemSumPriceDisplay);
+            updateCart(action, productId, buttonElement, quantitySpan, itemSumPriceDisplay);
+
         });
     });
 
     // Override existing functions from base.html to perform dynamic updates
-    function updateCart(action, productId, buttonElement, spinner, quantitySpan, itemSumPriceDisplay) {
+    function updateCart(action, productId, buttonElement, quantitySpan, itemSumPriceDisplay) {
         fetch('/cart/', {
             method: 'POST',
             headers: {
@@ -543,9 +527,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            // Re-enable button and hide spinner
             buttonElement.disabled = false;
-            if (spinner) spinner.style.display = 'none';
 
             if (data.status === 'success') {
                 showAlert(data.message || 'Cart updated successfully!', 'success');
@@ -575,9 +557,7 @@
             }
         })
         .catch(error => {
-            // Re-enable button and hide spinner on error
             buttonElement.disabled = false;
-            if (spinner) spinner.style.display = 'none';
 
             console.error('Error:', error);
             showAlert('Failed to update cart. Please try again.', 'error');
