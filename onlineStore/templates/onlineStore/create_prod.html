@@ -51,6 +51,9 @@
 
         <button type="submit">Add Product</button>
     </form>
+    {% if request.user.is_superuser %}
+   <a href='{% url "onlinestore:api_call" %}'>show products</a>
+    {% endif %}
     <a href="{% url 'onlinestore:home' %}">Back to Products</a>
     <style>
         body {

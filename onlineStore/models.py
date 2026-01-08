@@ -45,7 +45,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/', blank=True, null=True)  # Local file field
     image_url = models.URLField(blank=True, null=True)  # URL of the image on Google Drive
     is_available = models.BooleanField(default=True)
-   
+    
     def __str__(self):
         return self.name
 

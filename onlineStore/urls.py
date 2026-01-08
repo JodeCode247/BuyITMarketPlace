@@ -1,12 +1,11 @@
 from django.urls import path,include
-from . import views
+from . import views , serializer
 
 app_name = "onlinestore"
 
 urlpatterns = [
     
     path('',views.index,name='home'),
-    path('ela/', views.ela_upload_view, name='ela_upload'),
     path('add_to_cart/',views.add_to_cart,name='add_to_cart'),
     path('cart/',views.viewCart,name='cart'),
     path('get_cart_count/',views.get_cart_count,name='get_cart_count'),
@@ -16,15 +15,20 @@ urlpatterns = [
     path('orders/',views.orders,name='orders'),
     path('products_create/', views.create_product, name='create_product'),
     
-    # path('payment/paystack/webhook/', views.paystack_webhook, name='paystack_webhook'),
+    path('product_to_json/api/', serializer.obj_json,name='api_call'),
+    path('api_call/', serializer.outgoing_api_call,name='outgoing_api_call'),
 
     path('confirm_order_payment/<str:transaction_id>',views.confirm_order_payment,name='confirm_order_payment'),
     
     path('product_detail/<int:id>',views.products_description,name='products_description'),
 
+
     
     path('register_user/',views.register_user,name='register'),
     path('login_user/',views.login_user,name='login_user'),
     path('logout/',views.logout_user,name='logout_user'),
+
+    path('ela/', views.ela_upload_view, name='ela_upload'),
+
 
 ]

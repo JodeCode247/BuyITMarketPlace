@@ -17,151 +17,6 @@ from PIL import Image, ImageChops, ImageEnhance # Pillow library for image proce
 from io import BytesIO # For handling image data in memory
 import base64 # For encoding image data to send to HTML
 
-def analyze_ela(image_input, quality=90, enhancement_factor=5.0):
-    """
-    Performs Error Level Analysis (ELA) on a JPEG image to detect potential tampering.
-
-    ELA works by re-saving a JPEG image at a specified quality and then
-    comparing the re-saved image to the original. Areas that have been
-    manipulated will show a different error level (appear brighter)
-    because they have a different compression history.
-
-    Args:
-        image_input: The input image. Can be a file path (str), a file-like object
-                     (e.g., from request.FILES['image_field'].file in Django),
-                     or a PIL.Image.Image object.
-        quality (int, optional): The JPEG compression quality level (0-100)
-                                 to use when re-saving the image. A value
-                                 around 90-95 is often good for highlighting differences.
-                                 Defaults to 90.
-        enhancement_factor (float, optional): A factor to multiply the pixel
-                                              differences by, to make them more
-                                              visible. Higher values mean more contrast.
-                                              Defaults to 5.0.
-
-    Returns:
-        tuple: A tuple containing:
-            - PIL.Image.Image: An ELA image where altered areas appear brighter.
-            - float: A "tampering indicator" percentage (0-100) based on average ELA brightness.
-                     Returns None for both if an error occurs.
-    """
-    original = None
-    try:
-        if isinstance(image_input, Image.Image):
-            original = image_input.convert("RGB")
-        else: # Assume file-like object (e.g., from Django's InMemoryUploadedFile)
-            original = Image.open(image_input).convert("RGB")
-
-        # Save the original image to an in-memory buffer to apply compression
-        original_buffer = BytesIO()
-        original.save(original_buffer, format="JPEG", quality=quality)
-        original_buffer.seek(0) # Rewind the buffer to the beginning
-
-        # Re-open the image from the in-memory buffer to get the re-compressed version
-        ela_image = Image.open(original_buffer).convert("RGB")
-
-        # Calculate the absolute difference between the original and re-saved image
-        diff = ImageChops.difference(original, ela_image)
-
-        # Enhance the difference image to make ELA results more visible
-        diff = diff.convert("L") # "L" mode for grayscale
-        enhancer = ImageEnhance.Brightness(diff)
-        diff = enhancer.enhance(enhancement_factor)
-
-        # Calculate a "tampering indicator" percentage
-        # Get the histogram of the grayscale difference image
-        # The histogram is a list of pixel counts for each intensity value (0-255)
-        hist = diff.histogram()
-        
-        # Calculate the total number of pixels
-        total_pixels = sum(hist)
-        
-        # Calculate the sum of all pixel values (intensity * count)
-        # Max possible pixel value is 255 (white in grayscale)
-        sum_pixel_values = sum(i * count for i, count in enumerate(hist))
-        
-        # Calculate the average pixel value
-        average_pixel_value = sum_pixel_values / total_pixels if total_pixels > 0 else 0
-        
-        # Normalize to a percentage (0-100) based on max possible average brightness (255)
-        tampering_indicator_percentage = (average_pixel_value / 255.0) * 100
-
-        return diff, tampering_indicator_percentage
-
-    except Exception as e:
-        print(f"An error occurred during ELA analysis: {e}")
-        return None, None
-# --- End of analyze_ela function ---
-
-
-def ela_upload_view(request):
-    """
-    Handles image upload for Error Level Analysis (ELA).
-    - GET: Displays the upload form.
-    - POST: Processes the uploaded image, performs ELA, and displays the result.
-    """
-    ela_result_base64 = None
-    original_image_base64 = None
-    error_message = None
-    tampering_percentage = None # Initialize tampering percentage
-
-    if request.method == 'POST':
-        if 'image_file' in request.FILES:
-            uploaded_file = request.FILES['image_file']
-
-            # More robust validation for JPEG content types
-            # Common MIME types for JPEG are image/jpeg and sometimes image/jpg
-            # Using 'in' to catch variations, but 'image/jpeg' is the standard.
-            if 'jpeg' not in uploaded_file.content_type and 'jpg' not in uploaded_file.content_type:
-                error_message = "Please upload a JPEG (.jpg or .jpeg) image for ELA."
-            else:
-                try:
-                    # Read the uploaded file's content directly into BytesIO
-                    image_data_for_ela = BytesIO(uploaded_file.read())
-
-                    # Create a separate BytesIO for the original image display
-                    # This ensures the original_image_data is not consumed by analyze_ela
-                    uploaded_file.seek(0) # Rewind the original uploaded file stream
-                    original_image_display_data = BytesIO(uploaded_file.read())
-
-                    # Open the original image for display later (as PNG for broader browser support)
-                    original_image = Image.open(original_image_display_data).convert("RGB")
-                    original_image_buffer = BytesIO()
-                    original_image.save(original_image_buffer, format="PNG")
-                    original_image_base64 = base64.b64encode(original_image_buffer.getvalue()).decode('utf-8')
-                    original_image_buffer.close()
-
-                    # Perform ELA using the BytesIO object
-                    # The analyze_ela function will now return both the image and the percentage
-                    ela_image, percentage = analyze_ela(image_data_for_ela, quality=90, enhancement_factor=10.0)
-
-                    if ela_image:
-                        # Convert the ELA result image to base64 for embedding in HTML
-                        ela_buffer = BytesIO()
-                        ela_image.save(ela_buffer, format="PNG") # Save ELA result as PNG
-                        ela_result_base64 = base64.b64encode(ela_buffer.getvalue()).decode('utf-8')
-                        ela_buffer.close()
-                        
-                        tampering_percentage = f"{percentage:.2f}" # Format to 2 decimal places
-                    else:
-                        error_message = "Failed to perform ELA. Please check the image or try a different one."
-
-                except Exception as e:
-                    error_message = f"An unexpected error occurred during image processing: {e}"
-                    print(f"Error processing ELA upload: {e}")
-        else:
-            error_message = "No image file was uploaded. Please select a file."
-
-    context = {
-        'ela_result_base64': ela_result_base64,
-        'original_image_base64': original_image_base64,
-        'error_message': error_message,
-        'tampering_percentage': tampering_percentage, # Pass the percentage to the template
-    }
-    
-    return render(request,"onlineStore/ela_upload_form.html",context)
-
-
 def test_func(user):
         return user.is_authenticated # example.
 
@@ -249,18 +104,15 @@ def get_cart(request):
         cart, created = Cart.objects.get_or_create(user=request.user)
     else:
         cart_id = request.session.get('cart_id')
-        print(cart_id,'found')
-        print(request.session.items())
         if cart_id:
             try:
                 cart = Cart.objects.get(cart_id=cart_id, user__isnull=True)
             except Cart.DoesNotExist:
-                print('bad create')
                 cart = Cart.objects.create()
+                request.session['cart_id'] = str(cart.cart_id)
         else:
             cart = Cart.objects.create()
             request.session['cart_id'] = str(cart.cart_id)
-            print(request.session.get('cart_id'))
     return cart
 
 @csrf_protect 
@@ -497,6 +349,7 @@ def confirm_order_payment(request, transaction_id):
         messages.error(request, 'Order payment confirmation failed. , if debited send us this Order ID '+ '"' +str(transaction_id)+ '"'+' for refund')
         return redirect('onlinestore:home')
 
+
 @login_required(login_url='onlinestore:login_user')
 def orders(request):
     orders = Order.objects.filter(user=request.user, status='paid').order_by('-created_at')
@@ -606,3 +459,152 @@ def logout_user(request):
     logout(request)
     messages.success(request,'you are logged out')
     return redirect('onlinestore:home')
+
+
+
+
+
+def analyze_ela(image_input, quality=90, enhancement_factor=5.0):
+    """
+    Performs Error Level Analysis (ELA) on a JPEG image to detect potential tampering.
+
+    ELA works by re-saving a JPEG image at a specified quality and then
+    comparing the re-saved image to the original. Areas that have been
+    manipulated will show a different error level (appear brighter)
+    because they have a different compression history.
+
+    Args:
+        image_input: The input image. Can be a file path (str), a file-like object
+                     (e.g., from request.FILES['image_field'].file in Django),
+                     or a PIL.Image.Image object.
+        quality (int, optional): The JPEG compression quality level (0-100)
+                                 to use when re-saving the image. A value
+                                 around 90-95 is often good for highlighting differences.
+                                 Defaults to 90.
+        enhancement_factor (float, optional): A factor to multiply the pixel
+                                              differences by, to make them more
+                                              visible. Higher values mean more contrast.
+                                              Defaults to 5.0.
+
+    Returns:
+        tuple: A tuple containing:
+            - PIL.Image.Image: An ELA image where altered areas appear brighter.
+            - float: A "tampering indicator" percentage (0-100) based on average ELA brightness.
+                     Returns None for both if an error occurs.
+    """
+    original = None
+    try:
+        if isinstance(image_input, Image.Image):
+            original = image_input.convert("RGB")
+        else: # Assume file-like object (e.g., from Django's InMemoryUploadedFile)
+            original = Image.open(image_input).convert("RGB")
+
+        # Save the original image to an in-memory buffer to apply compression
+        original_buffer = BytesIO()
+        original.save(original_buffer, format="JPEG", quality=quality)
+        original_buffer.seek(0) # Rewind the buffer to the beginning
+
+        # Re-open the image from the in-memory buffer to get the re-compressed version
+        ela_image = Image.open(original_buffer).convert("RGB")
+
+        # Calculate the absolute difference between the original and re-saved image
+        diff = ImageChops.difference(original, ela_image)
+
+        # Enhance the difference image to make ELA results more visible
+        diff = diff.convert("L") # "L" mode for grayscale
+        enhancer = ImageEnhance.Brightness(diff)
+        diff = enhancer.enhance(enhancement_factor)
+
+        # Calculate a "tampering indicator" percentage
+        # Get the histogram of the grayscale difference image
+        # The histogram is a list of pixel counts for each intensity value (0-255)
+        hist = diff.histogram()
+        
+        # Calculate the total number of pixels
+        total_pixels = sum(hist)
+        
+        # Calculate the sum of all pixel values (intensity * count)
+        # Max possible pixel value is 255 (white in grayscale)
+        sum_pixel_values = sum(i * count for i, count in enumerate(hist))
+        
+        # Calculate the average pixel value
+        average_pixel_value = sum_pixel_values / total_pixels if total_pixels > 0 else 0
+        
+        # Normalize to a percentage (0-100) based on max possible average brightness (255)
+        tampering_indicator_percentage = (average_pixel_value / 255.0) * 100
+
+        return diff, tampering_indicator_percentage
+
+    except Exception as e:
+        print(f"An error occurred during ELA analysis: {e}")
+        return None, None
+# --- End of analyze_ela function ---
+
+
+def ela_upload_view(request):
+    """
+    Handles image upload for Error Level Analysis (ELA).
+    - GET: Displays the upload form.
+    - POST: Processes the uploaded image, performs ELA, and displays the result.
+    """
+    ela_result_base64 = None
+    original_image_base64 = None
+    error_message = None
+    tampering_percentage = None # Initialize tampering percentage
+
+    if request.method == 'POST':
+        if 'image_file' in request.FILES:
+            uploaded_file = request.FILES['image_file']
+
+            # More robust validation for JPEG content types
+            # Common MIME types for JPEG are image/jpeg and sometimes image/jpg
+            # Using 'in' to catch variations, but 'image/jpeg' is the standard.
+            if 'jpeg' not in uploaded_file.content_type and 'jpg' not in uploaded_file.content_type:
+                error_message = "Please upload a JPEG (.jpg or .jpeg) image for ELA."
+            else:
+                try:
+                    # Read the uploaded file's content directly into BytesIO
+                    image_data_for_ela = BytesIO(uploaded_file.read())
+
+                    # Create a separate BytesIO for the original image display
+                    # This ensures the original_image_data is not consumed by analyze_ela
+                    uploaded_file.seek(0) # Rewind the original uploaded file stream
+                    original_image_display_data = BytesIO(uploaded_file.read())
+
+                    # Open the original image for display later (as PNG for broader browser support)
+                    original_image = Image.open(original_image_display_data).convert("RGB")
+                    original_image_buffer = BytesIO()
+                    original_image.save(original_image_buffer, format="PNG")
+                    original_image_base64 = base64.b64encode(original_image_buffer.getvalue()).decode('utf-8')
+                    original_image_buffer.close()
+
+                    # Perform ELA using the BytesIO object
+                    # The analyze_ela function will now return both the image and the percentage
+                    ela_image, percentage = analyze_ela(image_data_for_ela, quality=90, enhancement_factor=10.0)
+
+                    if ela_image:
+                        # Convert the ELA result image to base64 for embedding in HTML
+                        ela_buffer = BytesIO()
+                        ela_image.save(ela_buffer, format="PNG") # Save ELA result as PNG
+                        ela_result_base64 = base64.b64encode(ela_buffer.getvalue()).decode('utf-8')
+                        ela_buffer.close()
+                        
+                        tampering_percentage = f"{percentage:.2f}" # Format to 2 decimal places
+                    else:
+                        error_message = "Failed to perform ELA. Please check the image or try a different one."
+
+                except Exception as e:
+                    error_message = f"An unexpected error occurred during image processing: {e}"
+                    print(f"Error processing ELA upload: {e}")
+        else:
+            error_message = "No image file was uploaded. Please select a file."
+
+    context = {
+        'ela_result_base64': ela_result_base64,
+        'original_image_base64': original_image_base64,
+        'error_message': error_message,
+        'tampering_percentage': tampering_percentage, # Pass the percentage to the template
+    }
+    
+    return render(request,"onlineStore/ela_upload_form.html",context)
+

@@ -1,3 +1,7 @@
 .env
 myenv/
 db.sqlite3
+serializer.py
+mydb.json
+api_test.html
+startup.py

@@ -1,7 +1,7 @@
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -14,11 +14,11 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
+# print(os.getenv('DEBUG'))
 DEBUG = os.getenv('DEBUG', 'False') == 'True' # Convert DEBUG to boolean
-# DEBUG = False
+DEBUG=False
 
-
-ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] # Add your custom domain if applicable
+ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] 
 AUTH_USER_MODEL ="onlineStore.MyUsers"
 
 
@@ -29,8 +29,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     'onlineStore',
 
+    'rest_framework',
     'social_django',
 ]
 

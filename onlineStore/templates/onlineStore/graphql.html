@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to Graphene & GraphQL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .active-nav {
+            color: #4F46E5;
+            border-bottom: 2px solid #4F46E5;
+        }
+        .nav-link {
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .code-block {
+            background-color: #1E293B;
+            color: #E2E8F0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Custom styles for the interactive diagram */
+        .diagram-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 2rem;
+            background-color: #F9FAFB;
+            border-radius: 0.5rem;
+        }
+        .diagram-node {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 150px;
+        }
+        .diagram-arrow {
+            font-size: 2rem;
+            color: #6B7280;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Chosen Palette: "Cool Harmony" -->
+    <!-- Application Structure Plan: The application is structured into four main, navigable sections: "Home," "Core Concepts," "Live API Explorer," and "Summary." This thematic structure was chosen to guide the user through a logical learning path, starting with an overview, diving into the details, providing a hands-on experience, and then summarizing the key takeaways. This is more effective than a linear document as it allows users to jump to the section most relevant to their needs and encourages interactive learning. -->
+    <!-- Visualization & Content Choices: 
+        - Core Idea: Presented as an interactive diagram (HTML/CSS/JS) to visually represent the flow of a GraphQL request vs. a traditional REST API. Goal: Inform. Interaction: Hovering over nodes reveals more information. Justification: A visual, interactive explanation is more engaging and easier to grasp for beginners than plain text.
+        - Graphene Types, Queries, Mutations, Subscriptions: These are presented in tabbed sections. Goal: Organize & Inform. Interaction: Clicking tabs reveals the relevant content and code examples. Justification: Tabs organize a large amount of related information cleanly, preventing cognitive overload and allowing users to focus on one concept at a time.
+        - Live API Explorer: An interactive code editor (simulated with a textarea) and response area. Goal: Engage & Practice. Interaction: Users can "run" predefined queries/mutations and see the expected JSON output. Justification: Hands-on practice is the most effective way to learn a new technology. This provides a safe, guided environment to experiment.
+        - Summary Table: A clear, concise HTML table. Goal: Summarize. Interaction: None. Justification: A simple table is the most effective way to present a high-level summary of when to use each operation.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">
+                <span class="text-indigo-600">Graphene</span> Guide
+            </h1>
+            <ul class="flex space-x-8 text-gray-600 font-medium">
+                <li><a href="#home" class="nav-link active-nav">Home</a></li>
+                <li><a href="#concepts" class="nav-link">Core Concepts</a></li>
+                <li><a href="#explorer" class="nav-link">API Explorer</a></li>
+                <li><a href="#summary" class="nav-link">Summary</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <!-- Section: Home -->
+        <section id="home" class="text-center py-16">
+            <h2 class="text-4xl font-bold mb-4">A Beginner's Guide to Graphene and GraphQL</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+                Welcome! This guide will introduce you to a new way of thinking about how your application talks to its data. We'll use a simple quiz application to build a powerful GraphQL API with Graphene, the Python implementation of GraphQL.
+            </p>
+            <h3 class="text-2xl font-semibold mb-6">The Core Idea: Asking for Exactly What You Need</h3>
+            <div class="diagram-container" id="api-diagram">
+                <div class="diagram-node" data-info="With a traditional REST API, you ask for a specific endpoint (e.g., `/questions`) and get a fixed data structure back, often with more information than you need.">
+                    <h4 class="font-bold">Traditional API</h4>
+                    <p class="text-sm">Fixed Menu</p>
+                </div>
+                <div class="diagram-arrow" id="arrow1">➔</div>
+                <div class="diagram-node" data-info="The server responds with a large, predefined platter of data. You might only need the question text, but you get everything.">
+                     <h4 class="font-bold">Over-fetching</h4>
+                    <p class="text-sm">The Whole Platter</p>
+                </div>
+            </div>
+             <div class="diagram-container mt-4" id="api-diagram2">
+                <div class="diagram-node" data-info="With GraphQL, you send a query describing exactly the data you want, down to the specific fields.">
+                    <h4 class="font-bold">GraphQL API</h4>
+                    <p class="text-sm">Custom Order</p>
+                </div>
+                <div class="diagram-arrow" id="arrow2">➔</div>
+                <div class="diagram-node" data-info="The server returns a JSON object that mirrors your query's structure, giving you precisely what you asked for and nothing more.">
+                     <h4 class="font-bold">Precise Data</h4>
+                    <p class="text-sm">Just What You Need</p>
+                </div>
+            </div>
+            <p id="diagram-info" class="mt-4 text-gray-600 h-10"></p>
+        </section>
+
+        <!-- Section: Core Concepts -->
+        <section id="concepts" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-12">Core Concepts Explained</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="flex border-b mb-8">
+                    <button class="tab-link active-tab py-2 px-6 font-medium text-lg focus:outline-none" data-tab="types">Types</button>
+                    <button class="tab-link py-2 px-6 font-medium text-lg focus:outline-none" data-tab="queries">Queries</button>
+                    <button class="tab-link py-2 px-6 font-medium text-lg focus:outline-none" data-tab="mutations">Mutations</button>
+                    <button class="tab-link py-2 px-6 font-medium text-lg focus:outline-none" data-tab="subscriptions">Subscriptions</button>
+                </div>
+
+                <div id="types" class="tab-content">
+                    <h3 class="text-2xl font-semibold mb-4">The Building Blocks — Graphene Types</h3>
+                    <p class="mb-6">The first step is to define what your data looks like. Graphene uses **types** to describe the structure of your data. Think of a type as a blueprint. Since we're using Django, `DjangoObjectType` automatically translates our models into GraphQL types.</p>
+                    <pre class="code-block"><code>import graphene
+from graphene_django.types import DjangoObjectType
+from .models import Questions, Options, Answer
+
+# Blueprint for the Questions model
+class QuestionType(DjangoObjectType):
+    class Meta:
+        model = Questions
+        fields = '__all__'
+
+# Blueprint for the Options model
+class OptionType(DjangoObjectType):
+    class Meta:
+        model = Options
+        fields = '__all__'</code></pre>
+                </div>
+
+                <div id="queries" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold mb-4">Queries — Fetching Your Data</h3>
+                    <p class="mb-6">Queries are used exclusively for fetching data. The client sends a query specifying the exact fields it needs, and the server returns a JSON object that mirrors that structure. We define the logic for this in a `Query` class.</p>
+                    <pre class="code-block"><code>class Query(graphene.ObjectType):
+    all_questions = graphene.List(QuestionType)
+    question = graphene.Field(QuestionType, id=graphene.Int())
+
+    def resolve_all_questions(root, info):
+        # Returns all question objects from the database
+        return Questions.objects.all()
+
+    def resolve_question(root, info, id):
+        # Returns a single question filtered by its ID
+        return Questions.objects.get(pk=id)</code></pre>
+                </div>
+
+                <div id="mutations" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold mb-4">Mutations — Changing Your Data</h3>
+                    <p class="mb-6">Any time a client needs to create, update, or delete data, a **mutation** is used. They are explicitly defined for writing data and can also return data upon completion.</p>
+                    <pre class="code-block"><code># First, define the input data structure
+class OptionInput(graphene.InputObjectType):
+    option_alphabet = graphene.String(required=True)
+    option_text = graphene.String(required=True)
+
+class CreateQuestion(graphene.Mutation):
+    class Arguments:
+        question_text = graphene.String()
+        options = graphene.List(OptionInput)
+        answer_alphabet = graphene.String()
+
+    question = graphene.Field(QuestionType)
+
+    def mutate(root, info, question_text, options, answer_alphabet):
+        # ... (logic to create question, options, and answer)
+        question = Questions.objects.create(text=question_text)
+        # ...
+        return CreateQuestion(question=question)</code></pre>
+                </div>
+
+                <div id="subscriptions" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold mb-4">Subscriptions — Real-time Updates</h3>
+                    <p class="mb-6">Subscriptions are for real-time applications. A client can "subscribe" to an event, and the server will push new data to it whenever that event occurs, using WebSockets. This is perfect for live dashboards, chats, or notifications.</p>
+                     <pre class="code-block"><code># Conceptual Graphene code for a subscription
+class Subscription(graphene.ObjectType):
+    new_question = graphene.Field(QuestionType)
+
+    def resolve_new_question(root, info):
+        # This would listen for a new question event and
+        # push the data to subscribed clients.
+        # Requires Django Channels setup.
+        pass</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: API Explorer -->
+        <section id="explorer" class="py-16 bg-white rounded-lg shadow-lg">
+            <h2 class="text-3xl font-bold text-center mb-4">Live API Explorer</h2>
+            <p class="text-center text-gray-600 mb-10">Get a feel for how GraphQL works. Select a query or mutation, click "Run", and see the result.</p>
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold">Request</h3>
+                        <select id="query-selector" class="border rounded-md px-3 py-1 bg-gray-50">
+                            <option value="query1">Query: Get All Questions (Light)</option>
+                            <option value="query2">Query: Get Single Question (Detailed)</option>
+                            <option value="mutation1">Mutation: Create a New Question</option>
+                        </select>
+                    </div>
+                    <textarea id="query-input" class="w-full h-96 p-4 rounded-md bg-gray-900 text-white font-mono text-sm border-gray-700 border"></textarea>
+                    <button id="run-query-btn" class="w-full mt-4 bg-indigo-600 text-white font-bold py-3 rounded-md hover:bg-indigo-700 transition-colors">
+                        Run
+                    </button>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Response</h3>
+                    <pre id="response-output" class="w-full h-[28.5rem] p-4 rounded-md bg-gray-100 border overflow-auto"><code class="language-json"></code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Summary -->
+        <section id="summary" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-12">Putting It All Together</h2>
+            <div class="max-w-4xl mx-auto overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="py-3 px-4 bg-gray-100 font-bold uppercase text-sm text-gray-600 border-b">Operation</th>
+                            <th class="py-3 px-4 bg-gray-100 font-bold uppercase text-sm text-gray-600 border-b">When to Use It</th>
+                            <th class="py-3 px-4 bg-gray-100 font-bold uppercase text-sm text-gray-600 border-b">Example with Quiz Data</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        <tr>
+                            <td class="py-4 px-4 border-b font-semibold">Query</td>
+                            <td class="py-4 px-4 border-b">When you want to **read** or **fetch** data. The client is asking a question.</td>
+                            <td class="py-4 px-4 border-b">Getting a list of all questions. Fetching a question's text and options.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-4 border-b font-semibold">Mutation</td>
+                            <td class="py-4 px-4 border-b">When you want to **create, update, or delete** data. The client is making a change.</td>
+                            <td class="py-4 px-4 border-b">Creating a new question. Deleting an option. Submitting a user's answer.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-4 border-b font-semibold">Subscription</td>
+                            <td class="py-4 px-4 border-b">When you need **real-time updates** from the server. The client is listening for a change.</td>
+                            <td class="py-4 px-4 border-b">A live leaderboard showing who answered the most questions.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation scroll highlighting
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.onscroll = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 60) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active-nav');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active-nav');
+                    }
+                });
+            };
+
+            // Interactive Diagram
+            const diagramNodes = document.querySelectorAll('.diagram-node');
+            const infoBox = document.getElementById('diagram-info');
+            const arrow1 = document.getElementById('arrow1');
+            const arrow2 = document.getElementById('arrow2');
+
+            diagramNodes.forEach(node => {
+                node.addEventListener('mouseenter', () => {
+                    infoBox.textContent = node.dataset.info;
+                });
+            });
+            
+            setTimeout(() => { arrow1.style.opacity = 1; }, 500);
+            setTimeout(() => { arrow2.style.opacity = 1; }, 700);
+
+
+            // Core Concepts Tabs
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const tabId = link.dataset.tab;
+
+                    tabLinks.forEach(item => item.classList.remove('active-tab', 'text-indigo-600'));
+                    link.classList.add('active-tab', 'text-indigo-600');
+
+                    tabContents.forEach(content => {
+                        if (content.id === tabId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            // API Explorer Logic
+            const querySelector = document.getElementById('query-selector');
+            const queryInput = document.getElementById('query-input');
+            const responseOutput = document.getElementById('response-output').querySelector('code');
+            const runBtn = document.getElementById('run-query-btn');
+
+            const queries = {
+                query1: {
+                    request: `query AllQuestions {
+  allQuestions {
+    id
+    text
+  }
+}`,
+                    response: `{
+  "data": {
+    "allQuestions": [
+      { "id": 1, "text": "What is the capital of France?" },
+      { "id": 2, "text": "Which planet is known as the Red Planet?" },
+      { "id": 3, "text": "What is the largest ocean on Earth?" }
+    ]
+  }
+}`
+                },
+                query2: {
+                    request: `query GetQuestionDetails {
+  question(id: 1) {
+    text
+    options {
+      optionAlphabet
+      optionText
+    }
+  }
+}`,
+                    response: `{
+  "data": {
+    "question": {
+      "text": "What is the capital of France?",
+      "options": [
+        { "optionAlphabet": "a", "optionText": "London" },
+        { "optionAlphabet": "b", "optionText": "Berlin" },
+        { "optionAlphabet": "c", "optionText": "Paris" },
+        { "optionAlphabet": "d", "optionText": "Rome" }
+      ]
+    }
+  }
+}`
+                },
+                mutation1: {
+                    request: `mutation CreateNewQuestion {
+  createQuestion(
+    questionText: "Which fruit is green and sour?",
+    options: [
+      { optionAlphabet: "a", optionText: "Banana" },
+      { optionAlphabet: "b", optionText: "Apple" }
+    ],
+    answerAlphabet: "b"
+  ) {
+    question {
+      id
+      text
+    }
+  }
+}`,
+                    response: `{
+  "data": {
+    "createQuestion": {
+      "question": {
+        "id": 11,
+        "text": "Which fruit is green and sour?"
+      }
+    }
+  }
+}`
+                }
+            };
+
+            function updateExplorer() {
+                const selected = querySelector.value;
+                queryInput.value = queries[selected].request;
+                responseOutput.textContent = '// Click "Run" to see the response';
+            }
+
+            querySelector.addEventListener('change', updateExplorer);
+            
+            runBtn.addEventListener('click', () => {
+                const selected = querySelector.value;
+                responseOutput.textContent = 'Loading...';
+                setTimeout(() => {
+                    responseOutput.textContent = queries[selected].response;
+                }, 500);
+            });
+
+            // Initial state
+            updateExplorer();
+            document.querySelector('.tab-link[data-tab="types"]').classList.add('text-indigo-600');
+        });
+    </script>
+</body>
+</html>
