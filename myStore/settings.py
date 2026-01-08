@@ -18,7 +18,7 @@ SECRET_KEY =  os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True' # Convert DEBUG to boolean
 DEBUG=False
 
-ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", "yo.com"] 
+ALLOWED_HOSTS = ["*"] 
 AUTH_USER_MODEL ="onlineStore.MyUsers"
 
 
@@ -32,7 +32,6 @@ INSTALLED_APPS = [
     
     'onlineStore',
 
-    'rest_framework',
     'social_django',
 ]
 
