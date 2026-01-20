@@ -30,4 +30,4 @@ psycopg2-binary
 djangorestframework 
 whitenoise==6.8.2
 google-genai
-pgvector
+pgvector==0.3.6
