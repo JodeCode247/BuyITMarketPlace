@@ -3,805 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BUY.IT - Premium Shopping Experience</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <title>{% block title %}Buy It Marketplace{% endblock %}</title>
     <style>
-/* In your static/css/style.css or similar file */
-
-.messages {
-    list-style: none;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
-}
-
-.messages li {
-    padding: 8px 12px;
-    margin-bottom: 5px;
-    border-radius: 3px;
-    font-weight: bold;
-}
-
-.messages .success {
-    background-color: #d4edda; /* Light green */
-    color: #155724; /* Dark green */
-    border: 1px solid #c3e6cb;
-}
-
-.messages .error {
-    background-color: #f8d7da; /* Light red */
-    color: #721c24; /* Dark red */
-    border: 1px solid #f5c6cb;
-}
-
-.messages .info {
-    background-color: #d1ecf1; /* Light blue */
-    color: #0c5460; /* Dark blue */
-    border: 1px solid #bee5eb;
-}
-
-.messages .warning {
-    background-color: #fff3cd; /* Light yellow */
-    color: #856404; /* Dark yellow */
-    border: 1px solid #ffeeba;
-}
-        /* General resets and base font */
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Inter', Arial, sans-serif;
-            line-height: 1.6;
-            background-color: #f4f4f4; /* A light background for context */
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh; /* Ensures full viewport height for demo */
-        }
-
-        /* --- Optimized Header Styles --- */
-        header {
-            background: linear-gradient(to right, #ff8c00, #ffa500, #ffcc00); /* Golden orange gradient */
-            padding: 1.2rem 2.5rem; /* Generous padding for a premium feel */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Pronounced shadow for depth */
-            position: sticky; /* Makes the header stick to the top when scrolling */
-            top: 0;
-            z-index: 1000; /* Ensures the header stays on top of other content */
-        }
+        .bg-orange-primary { background-color: #FF8C00; }
+        .text-orange-primary { color: #FF8C00; }
+        .border-orange-primary { border-color: #FF8C00; }
+        .hover-orange:hover { background-color: #e67e00; }
         
-        .logo {
-            font-size: 2.2rem; /* Larger, impactful logo text */
-            font-weight: 700; /* Bolder font weight */
-            color: white; /* White text for contrast on orange gradient */
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Subtle text shadow for dimension */
-            letter-spacing: -0.05em; /* Tighter letter spacing for a refined look */
-            transition: transform 0.2s ease-in-out; /* Smooth hover effect */
-        }
-        .logo:hover {
-            transform: scale(1.03); /* Slightly scales up the logo on hover */
-        }
-        
-        nav {
-            display: flex; /* Ensures navigation items are flexible */
-            align-items: center;
-            gap: 1.5rem; /* Space between nav items and other header elements */
-        }
+        /* Sidebar Logic */
+       #verticalMenu { transition: all 0.3s ease-in-out; left: -280px; }
+       .menu-open #verticalMenu { left: 0; }
+        #menuOverlay { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .menu-open #menuOverlay { opacity: 1; pointer-events: auto; }
 
-        nav ul {
-            list-style-type: none; /* Removes default list bullets */
-            display: flex; /* Arranges nav links horizontally */
-            align-items: center;
-            gap: 2.5rem; /* Wider spacing between desktop navigation links */
-        }
-        
-        nav ul li {
-            position: relative; /* Needed for the underline hover effect */
-        }
-        
-        nav ul li a {
-            color: white; /* White link text */
-            text-decoration: none;
-            font-weight: 500; /* Medium font weight for readability */
-            font-size: 1.05rem; /* Slightly larger font size for links */
-            padding: 5px 0; /* Vertical padding to make hover area larger */
-            transition: all 0.3s ease; /* Smooth transition for all properties */
-        }
+        /* Alert Animations */
+        #alert-container { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: translateY(-100px); opacity: 0; }
+        #alert-container.show { transform: translateY(0); opacity: 1; }
+        .alert-success { border-left: 4px solid #10b981; background: white; }
+        .alert-error { border-left: 4px solid #ef4444; background: white; }
 
-        /* Underline effect for desktop navigation links on hover */
-        nav ul li a::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: white; /* White underline */
-            transform: scaleX(0); /* Initially hidden */
-            transform-origin: bottom right; /* Origin for scale animation */
-            transition: transform 0.3s ease-out; /* Smooth slide-out effect */
-        }
-        nav ul li a:hover::after {
-            transform: scaleX(1); /* Expands to full width on hover */
-            transform-origin: bottom left; /* Changes origin for re-entry */
-        }
+        /* 2. AI & HTMX Loading Styles */
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: flex; }
+        .htmx-request.htmx-indicator { display: flex; }
 
-        /* Welcome message in header */
-        header h4 {
-            color: #ffe0b3; /* Lighter orange, slightly desaturated for welcome text */
-            font-weight: 600; /* Semi-bold */
-            font-size: 1rem;
-            margin-right: 1.5rem; /* Space before other nav items */
-        }
+        /* When HTMX is busy, transform search buttons */
+        .htmx-request .search-text { display: none; }
+        .htmx-request .ai-loader { display: flex !important; }
 
-        /* Cart Icon and Badge - ALWAYS VISIBLE */
-        .cart-icon {
-            position: relative;
-            display: inline-block; /* Changed to inline-block to always display */
-            font-size: 1.6rem; /* Larger shopping cart icon */
-            transition: transform 0.2s ease-in-out; /* Subtle zoom on hover */
-            color: white; /* Ensures the cart icon is white */
-            margin-left: 1.5rem; /* Add some space from other nav items */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .cart-icon:hover {
-            transform: scale(1.1);
-        }
-        .cart-badge {
-            position: absolute;
-            top: -8px; /* Positions above the icon */
-            right: -15px; /* Positions to the right of the icon */
-            background-color: rgb(206, 30, 68); /* Red color for notification badge */
-            color: white;
-            border-radius: 50%; /* Perfect circle shape */
-            padding: 3px 7px; /* Adjusts size of the badge */
-            font-size: 0.75rem; /* Small, clear font for the count */
-            min-width: 18px; /* Minimum width to prevent squishing single digits */
-            height: 18px; /* Consistent height for circular shape */
-            display: flex; /* Uses flexbox to center content inside badge */
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
-        }
-        .cart-badge.hidden {
-            display: none; /* Class to hide the badge when cart is empty */
-        }
-
-        /* Hamburger icon for mobile (hidden on desktop) */
-        .menu-toggle {
-            display: none; /* Hidden by default, shown via media query */
-            background: none;
-            border: none;
-            color: white; /* White icon for contrast */
-            font-size: 1.8rem; /* Large enough for easy tapping */
-            cursor: pointer;
-            padding: 5px;
-            transition: transform 0.2s ease;
-        }
-        .menu-toggle:hover {
-            transform: scale(1.1);
-        }
-
-        /* Vertical Menu (Mobile/Sidebar) */
-        .vertical-menu {
-            position: fixed;
-            left: -280px; /* Starts off-screen */
-            width: 280px; /* Fixed width of the sidebar menu */
-            height: 100vh; /* Full viewport height */
-            overflow-y: auto; /* Adds scrolling if content is long */
-            background-color: #ffffff; /* White background for the menu */
-            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2); /* Shadow to differentiate from background */
-            padding: 25px; /* Internal padding */
-            z-index: 1000; /* Ensures it overlays content */
-            transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth slide-in/out animation */
-            display: flex;
-            flex-direction: column; /* Stacks menu items vertically */
-        }
-        .vertical-menu.open {
-            left: 0; /* Slides into view */
-        }
-        .vertical-menu h3 {
-            color: #1a202c; /* Darker heading color */
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-        .vertical-menu ul {
-            list-style: none; /* No bullets */
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem; /* Space between list items */
-        }
-        .vertical-menu a {
-            display: block;
-            padding: 12px 10px;
-            text-decoration: none;
-            color: #333; /* Dark text for menu items */
-            font-size: 1.05rem;
-            border-radius: 5px;
-            transition: background-color 0.2s ease, color 0.2s ease;
-        }
-        .vertical-menu a:hover {
-            background-color: #ffe0b3; /* Light orange highlight on hover */
-            color: #333;
-        }
-        .vertical-menu a.font-semibold {
-            font-weight: 600;
-            color: #f97316; /* Tailwind orange-500 */
-        }
-        .vertical-menu a.hover\:text-orange-800:hover {
-            color: #c2410c; /* Tailwind orange-800 */
-        }
-        .close-icon {
-            cursor: pointer;
-            font-size: 1.8rem;
-            color: #555;
-            align-self: flex-end; /* Aligns the close icon to the top-right of the menu */
-            margin-bottom: 1rem;
-            transition: color 0.2s ease;
-        }
-        .close-icon:hover {
-            color: #000;
-        }
-
-        /* Content Shift when vertical menu is open (for main content, if any) */
-        main {
-            transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            flex: 1; /* Allows main content to expand */
-            padding: 20px; /* Default padding for content area */
-        }
-        main.shifted {
-            margin-left: 280px; /* Shifts main content to the right to make space for the menu */
-        }
-
-        /* Global Alert Styles (mimicking a system usually found in base.html) */
-        .alert-container {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            width: fit-content;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .alert-container.show {
-            opacity: 1;
-            display: block;
-        }
-        .alert {
-            padding: 15px 20px;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
-        }
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-        .alert .close-button {
-            margin-left: auto;
-            border: none;
-            background: transparent;
-            padding: 0;
-            font-size: 1rem;
-            color: #155724;
-            cursor: pointer;
-        }
-        .alert .close-button:hover {
-            color: #0b2e13;
-        }
-
-        /* --- Product Listing Styles (Integrated from your provided snippet) --- */
-        /* These styles will only apply if .products content is inserted into <main> */
-        .products {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .products h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2rem;
-            color: #1a202c;
-            font-weight: 700;
-        }
-        
-        .search-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            justify-content: center;
-            align-items: center;
-        }
-        .search-bar form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            width: 100%;
-            max-width: 500px;
-        }
-        .search-bar .bar {
-            flex-grow: 1;
-            padding: 10px 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .search-bar .bar:focus {
-            outline: none;
-            border-color: orange;
-            box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.25);
-        }
-        .search-bar .btn {
-            background-color: orange;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .search-bar .btn:hover {
-            background-color: darkorange;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        .search-bar .btn:active {
-            background-color: #D45A00;
-            transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            justify-content: center;
-        }
-        
-        .product {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 380px;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        
-        .product:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .product img {
-            max-width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-
-        .product-info {
-            flex-grow: 1;
-            text-align: left;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            overflow: hidden;
-        }
-
-        .product-info h3 {
-            font-size: 1.15rem;
-            margin-bottom: 8px;
-            color: #333;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .product-info p {
-            font-size: 1rem;
-            color: #555;
-            font-weight: 600;
-            margin-top: auto;
-        }
-        
-        .product .add-to-cart-button {
-            background-color: orange;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
-            width: 100%;
-            transition: background-color 0.2s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 4px rgba(255, 165, 0, 0.2);
-        }
-
-        .product .add-to-cart-button:hover {
-            background-color: darkorange;
-            box-shadow: 0 4px 8px rgba(255, 165, 0, 0.3);
-        }
-        .product .add-to-cart-button:active {
-            background-color: #D45A00;
-            transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(255, 165, 0, 0.1);
-        }
-
-        /* Loading Indicator Styles */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            color: white;
-            font-size: 1.5rem;
-        }
-
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
+        .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
         }
-
-        .button-spinner {
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid #fff;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
+        .animate-spin {
             animation: spin 1s linear infinite;
-            display: none; /* Hidden by default */
-        }
-
-        /* Footer Styles (as per original base.html structure) */
-        footer {
-            background-color: #ffffff;
-            margin-top: 2rem;
-            padding: 1rem;
-            text-align: center;
-            color: #4b5563;
-            font-size: 0.875rem;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        /* Responsive Adjustments for Main Content */
-        @media (max-width: 767px) {
-            .products {
-                transition: opacity 0.3s ease;
-                padding: 10px; /* Smaller padding on mobile */
-            }
-
-            .products.hidden { /* Used by toggleMenu to hide content */
-                opacity: 0;
-                pointer-events: none;
-            }
-            
-            .product-grid {
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* More items per row on small phones */
-                gap: 15px; /* Smaller gap */
-            }
-
-            .product {
-                height: 320px; /* Adjust height for smaller screens */
-                padding: 10px;
-            }
-
-            .product img {
-                height: 150px; /* Adjust image height */
-                margin-bottom: 10px;
-            }
-
-            .product-info h3 {
-                font-size: 1rem;
-            }
-
-            .product-info p {
-                font-size: 0.9rem;
-            }
-
-            .product .add-to-cart-button {
-                padding: 8px 12px;
-                font-size: 0.9rem;
-            }
-
-            .search-bar form {
-                flex-direction: column; /* Stack search input and button */
-                gap: 5px;
-                max-width: unset;
-            }
-            .search-bar .bar {
-                width: 100%;
-            }
-            .search-bar .btn {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .product-grid {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Even smaller items per row for tiny screens */
-                gap: 10px;
-            }
-
-            .product {
-                height: 280px;
-                padding: 8px;
-            }
-
-            .product img {
-                height: 120px;
-            }
-
-            .product-info h3 {
-                font-size: 0.9rem;
-            }
-
-            .product-info p {
-                font-size: 0.8rem;
-            }
-
-            .product .add-to-cart-button {
-                padding: 6px 10px;
-                font-size: 0.8rem;
-            }
         }
     </style>
 </head>
-<body>
-    {# Global Alert Container - This would typically be in base.html for site-wide alerts #}
-    <div class="alert-container" id="alert-container">
-        <div class="alert alert-success" role="alert">
-            <i class="fa fa-check-circle alert-icon"></i>
-            <span id="alert-message"></span>
-            <button type="button" class="close-button" id="close-alert-button" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    </div>
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
-                {{ message }}
-            </li>
-        {% endfor %}
-    </ul>
-{% endif %}
+<body class="bg-gray-50 text-gray-900 font-sans">
 
-    <header>
-        <div class="logo"><a href="{% url 'onlinestore:home' %}">BUY.IT</a></div>
-        <nav class="flex items-center"> {# Using flex for better alignment #}
+    <div id="alert-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-md p-4 rounded-2xl shadow-2xl flex items-center justify-between border border-gray-100 hidden">
+        <div class="flex items-center gap-3">
+            <i class="alert-icon fas fa-check-circle text-xl"></i>
+            <span id="alert-message" class="font-bold text-sm text-gray-800"></span>
+        </div>
+        <button id="close-alert-button" class="text-gray-400 hover:text-black">&times;</button>
+    </div>
+
+    <div id="loading-overlay" class="htmx-indicator fixed inset-0 bg-white/80 backdrop-blur-sm z-[300] hidden items-center justify-center flex-col gap-4">
+        <div class="w-12 h-12 border-4 border-orange-primary/20 border-t-orange-primary rounded-full animate-spin"></div>
+        <p id="loading-text" class="font-black text-orange-primary text-xs uppercase tracking-widest">Processing...</p>
+    </div>
+
+    <div id="menuOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 z-[55]"></div>
+
+    <nav class="bg-white shadow-sm py-4 px-6 flex justify-between items-center border-b-2 border-orange-primary sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <h1 class="text-2xl font-bold text-orange-primary">
+                <a href="{% url 'onlinestore:home' %}">Buy it <span class="text-gray-800">Marketplace</span></a>
+            </h1>
+        </div>
+
+        <div class="flex items-center space-x-6">
+            <a href="{% url 'onlinestore:home' %}" class="hidden md:block text-gray-600 hover:text-orange-primary font-medium transition">Home</a>
             {% if request.user.is_authenticated %}
-            <h4 class="hidden md:block">Welcome {{request.user.username}}</h4> {# Hidden on small, shown on medium+ #}
+                <a href="{% url 'onlinestore:orders' %}" class="hidden md:block text-gray-600 hover:text-orange-primary font-medium transition">Orders</a>
             {% endif %}
-            <ul> {# Desktop navigation links #}
-                <li><a href="{% url 'onlinestore:home' %}">Home</a></li>
-                {% if request.user.is_superuser %}
-                <li><a href="{% url 'onlinestore:create_product' %}">Add product</a></li>
-                {% endif %}
-                {# Cart icon moved outside the main nav UL so it's always visible #}
-            <div class="cart-icon">
+            
+            <div class="relative group">
                 <a href="{% url 'onlinestore:cart' %}">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-badge hidden" id ="cartBadge">0</span> {# Default to 0, updated by JS #}
+                    <i class="fas fa-shopping-cart text-xl text-gray-700 group-hover:text-orange-primary transition"></i>
+                    <span id="cartBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 border-2 border-white {% if not cart_count %}hidden{% endif %}">
+                        {{ cart_count|default:"0" }}
+                    </span>
                 </a>
             </div>
-                {% if request.user.is_authenticated %}
-                <li> <a href="{% url 'onlinestore:orders' %}"><strong>Orders</strong></a></li>
-                <li><a href="{% url 'onlinestore:logout_user' %}">Logout</a></li>
-                {% else %}
-                <li><a href="{% url 'onlinestore:login_user' %}">Login</a></li>
-                <li><a href="{% url 'onlinestore:register' %}">Register</a></li>
-                {% endif %}
-                <li><a href="https://t.co/bL1FJYSvBM">Contact</a></li>
-            </ul>
-            
-            {# Hamburger menu toggle for mobile #}
-            <button class="menu-toggle md:hidden" onclick="toggleMenu()">
-                <i class="fas fa-bars"></i>
-            </button>
-        </nav>
-    </header>
-    
-    {# Vertical Menu for Mobile/Sidebar (positioned off-screen by default) #}
-    <div class="vertical-menu" id="verticalMenu">
-        <div>
-            <div class="close-icon" onclick="toggleMenu()"><strong>&times;</strong></div>
-        </div>
-        <h3 class="text-xl font-bold mb-4 text-gray-800">Categories</h3>
-        <ul class="flex flex-col gap-2">
-            <li><a href="{% url 'onlinestore:home' %}" class="font-semibold text-orange-600 hover:text-orange-800">All Products</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Electronics">Electronics</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Clothing">Clothing</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Home & Kitchen">Home & Kitchen</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Books">Books</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Beauty">Beauty</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Sports">Sports</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Health">Health</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Grocery">Games</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Automotive">Automotive</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Baby">Baby</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Pet Supplies">Pet Supplies</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Tools">Tools</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Garden">Garden</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Office Supplies">Office Supplies</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Musical Instruments">Musical Instruments</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Jewelry">Jewelry</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Footwear">Footwear</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Accessories">Accessories</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Furniture">Furniture</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Toys">Toys</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Video Games">Video Games</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Movies">Movies</a></li>
-            <li><a href="{% url 'onlinestore:home' %}?query=Music">Music</a></li>
-        </ul>
-        <h3 class="text-xl font-bold mb-4 text-gray-800 mt-6">My Account</h3>
-        <ul class="flex flex-col gap-2">
+
             {% if request.user.is_authenticated %}
-            <li><a href="{% url 'onlinestore:orders' %}"><strong>Orders</strong></a></li>
-            <li><a href="{% url 'onlinestore:logout_user' %}">Logout</a></li>
+                <a href="{% url 'onlinestore:logout_user' %}" class="text-gray-500 hover:text-red-500 transition"><i class="fas fa-sign-out-alt"></i></a>
             {% else %}
-            <li><a href="{% url 'onlinestore:login_user' %}">Login</a></li>
-            <li><a href="{% url 'onlinestore:register' %}">Register</a></li>
+                <a href="{% url 'onlinestore:login_user' %}" class="bg-orange-primary text-white px-4 py-1.5 rounded-full text-sm font-bold hover-orange shadow-sm">Login</a>
             {% endif %}
-            <li><a href="{% url 'onlinestore:cart' %}">Cart</a></li>
-            <li><a href="https://t.co/bL1FJYSvBM">Contact</a></li>
-            <li><a href="#">Settings</a></li>
-            <li><a href="#">Wishlist</a></li>
-        </ul>
+        </div>
+    </nav>
+
+    <div id="verticalMenu" class="fixed top-0 -left-[280px] w-[280px] h-full bg-white z-[60] shadow-2xl p-6 overflow-y-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-orange-primary font-bold">Menu</h2>
+        <button onclick="toggleMenu()" class="text-gray-400 hover:text-black text-2xl">&times;</button>
     </div>
+    
+    <h3 class="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-4">Navigation</h3>
+    <ul class="space-y-1 mb-8">
+        <li><a href="{% url 'onlinestore:home' %}" class="block p-3 rounded-xl hover:bg-orange-50 hover:text-orange-primary transition font-medium">Home</a></li>
+        
+        {% if request.user.is_authenticated %}
+        <li><a href="{% url 'onlinestore:orders' %}" class="block p-3 rounded-xl hover:bg-orange-50 hover:text-orange-primary transition font-medium">My Orders</a></li>
+        {% endif %}
+    </ul>
+
+    <h3 class="text-orange-primary font-bold uppercase tracking-widest text-[10px] mb-4">Categories</h3>
+    <ul class="space-y-1 mb-8">
+        <li><a href="?query=Electronics" class="block p-3 rounded-xl hover:bg-gray-50 transition text-gray-600">Electronics</a></li>
+        <li><a href="?query=Clothing" class="block p-3 rounded-xl hover:bg-gray-50 transition text-gray-600">Clothing</a></li>
+    </ul>
+</div>
 
     <main>
         {% block content %}
-        
         {% endblock content %}
     </main>
 
-    {# Global Loading Overlay (if needed for site-wide operations) #}
-    <div class="loading-overlay" id="loading-overlay" style="display: none;">
-        <div class="spinner"></div>
-        Loading...
-    </div>
-
-    <footer>
-        <p>© 2025 saint JHN Shopping Site. All rights reserved.</p>
+    <footer class="bg-white border-t mt-20 py-12 px-6 text-center">
+        <p class="text-gray-400 text-sm font-medium">
+            © 2026 <span class="text-orange-primary">Buy it</span> Marketplace. 
+            <span class="hidden sm:inline">| Built with AI Smart Search.</span>
+        </p>
     </footer>
 
-    <script>
-        // --- Global Functions (simulating functions from a base.html context) ---
+    <script> 
+        // --- 4. CSRF Token Config for HTMX ---
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = getCookie('csrftoken');
+        });
 
-        const loadingOverlay = document.getElementById('loading-overlay');
+        function toggleMenu() {
+            document.body.classList.toggle('menu-open');
+        }
+
         const alertContainer = document.getElementById('alert-container');
         const alertMessageSpan = document.getElementById('alert-message');
-        const closeAlertButton = document.getElementById('close-alert-button');
+        const loadingOverlay = document.getElementById('loading-overlay');
         const cartBadge = document.getElementById('cartBadge');
 
-        function showLoading() {
-            if (loadingOverlay) loadingOverlay.style.display = 'flex';
-        }
-
-        function hideLoading() {
-            if (loadingOverlay) loadingOverlay.style.display = 'none';
-        }
-
         function showAlert(message, type = 'success') {
-            if (!alertContainer || !alertMessageSpan) return;
-
+            if (!alertContainer) return;
             alertMessageSpan.textContent = message;
-            alertContainer.classList.remove('alert-success', 'alert-error');
+            alertContainer.style.display = 'flex';
+            alertContainer.classList.remove('alert-success', 'alert-error', 'show');
             alertContainer.classList.add(`alert-${type}`);
-            
-            const iconElement = alertContainer.querySelector('.alert-icon');
-            if (iconElement) {
-                iconElement.classList.remove('fa-check-circle', 'fa-times-circle');
-                if (type === 'success') {
-                    iconElement.classList.add('fa-check-circle');
-                } else if (type === 'error') {
-                    iconElement.classList.add('fa-times-circle');
-                }
-            }
-
-            alertContainer.classList.add('show');
-
-            setTimeout(() => {
-                hideAlert();
-            }, 5000);
+            const icon = alertContainer.querySelector('.alert-icon');
+            icon.className = type === 'success' ? 'alert-icon fas fa-check-circle text-emerald-500' : 'alert-icon fas fa-exclamation-circle text-red-500';
+            setTimeout(() => alertContainer.classList.add('show'), 10);
+            setTimeout(hideAlert, 4000);
         }
 
         function hideAlert() {
             if (!alertContainer) return;
             alertContainer.classList.remove('show');
-            setTimeout(() => { alertContainer.style.display = 'none'; }, 300);
+            setTimeout(() => alertContainer.style.display = 'none', 400);
         }
 
-        if (closeAlertButton) {
-            closeAlertButton.addEventListener('click', hideAlert);
-        }
-
-        document.addEventListener('click', (event) => {
-            if (alertContainer && alertContainer.classList.contains('show') && 
-                !alertContainer.contains(event.target) && event.target.id !== 'close-alert-button') {
-                hideAlert();
-            }
-        });
-
-        // Toggle mobile menu and shift main content
-        function toggleMenu() {
-            const verticalMenu = document.getElementById("verticalMenu");
-            const mainContent = document.querySelector("main");
-            const productsSection = document.querySelector(".products"); // Target the products section if it exists
-            
-            if (!verticalMenu || !mainContent) return;
-
-            if (verticalMenu.classList.contains("open")) {
-                verticalMenu.classList.remove("open");
-                mainContent.classList.remove("shifted");
-                if (productsSection && window.innerWidth <= 767) {
-                    productsSection.classList.remove("hidden"); // Show products section on menu close if it was hidden
-                }
-            } else {
-                verticalMenu.classList.add("open");
-                mainContent.classList.add("shifted");
-                if (productsSection && window.innerWidth <= 767) {
-                    productsSection.classList.add("hidden"); // Hide products section on menu open if on mobile
-                }
+        function showLoading(message = "Processing...") { 
+            if (loadingOverlay) {
+                document.getElementById('loading-text').textContent = message;
+                loadingOverlay.style.display = 'flex'; 
             }
         }
+        function hideLoading() { if (loadingOverlay) loadingOverlay.style.display = 'none'; }
 
-        // Update cart badge count
+        document.getElementById('close-alert-button')?.addEventListener('click', hideAlert);
+    
         function updateBadge(count) {
             if (cartBadge) {
                 if (count > 0) {
@@ -813,19 +183,55 @@
             }
         }
         
-        // Fetch cart count from backend
         function fetchCartCount() {
-            fetch('/get_cart_count/') // Replace with your actual Django URL for cart count
+            fetch('/get_cart_count/') 
                 .then(response => response.json())
-                .then(data => {
-                    updateBadge(data.count);
-                })
-                .catch(error => {
-                    console.error('Error fetching cart count:', error);
-                });
+                .then(data => { updateBadge(data.count); })
+                .catch(error => { console.error('Error fetching cart count:', error); });
         }
 
-        // Get CSRF token (essential for Django POST requests)
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCartCount(); 
+
+            // Delegation for Add to Cart (Handles items loaded by HTMX)
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.add-to-cart-button');
+                if (btn) {
+                    const productId = btn.dataset.productId;
+                    const originalButtonText = btn.innerHTML;
+                    const spinner = btn.querySelector('.button-spinner');
+                    btn.disabled = true;
+                    btn.innerHTML = 'Adding...'; 
+                    if (spinner) spinner.style.display = 'inline-block';
+                    addItem(productId, btn, originalButtonText, spinner);
+                }
+            });
+        });
+
+        function addItem(productId, buttonElement, originalButtonText, spinnerElement) {
+            fetch('/add_to_cart/', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalButtonText;
+                if (data.status === 'success') {
+                    showAlert(data.message || 'Product added to cart!', 'success');
+                    fetchCartCount();
+                } else {
+                    showAlert(data.message || 'Error adding product.', 'error');
+                }
+            })
+            .catch(error => {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalButtonText;
+                showAlert('Failed to add product.', 'error');
+            });
+        }
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -840,170 +246,6 @@
             }
             return cookieValue;
         }
-
-        // --- Event Listeners for Header Functionality and Cart Operations ---
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchCartCount(); // Initial fetch on page load
-
-            // Handle Django messages if they are passed globally from the backend
-            const djangoMessagesElement = document.querySelector('script[type="text/javascript"][data-messages]');
-            if (djangoMessagesElement) {
-                try {
-                    const djangoMessages = JSON.parse(djangoMessagesElement.dataset.messages);
-                    if (djangoMessages.length > 0) {
-                        const message = djangoMessages[0];
-                        showAlert(message.message, message.tags);
-                    }
-                } catch (e) {
-                    console.error("Error parsing  messages:", e);
-                }
-            }
-
-            // --- Cart Operations (assuming these are global functions needed for any page) ---
-            document.querySelectorAll('.add-to-cart-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const productId = this.dataset.productId;
-                    const originalButtonText = this.innerHTML;
-                    const spinner = this.querySelector('.button-spinner');
-
-                    this.disabled = true;
-                    this.innerHTML = 'Adding...'; 
-                    if (spinner) {
-                       spinner.style.display = 'inline-block';
-                    }
-                    addItem(productId, this, originalButtonText, spinner);
-                });
-            });
-        });
-
-        // These functions are included here because your provided snippet's JS implies them
-        // If these are defined in a separate global JS file for your Django project, you can remove them from here.
-        function addItem(productId, buttonElement, originalButtonText, spinnerElement) {
-            fetch('/add_to_cart/', { // Replace with your Django URL
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    product_id: productId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                buttonElement.disabled = false;
-                buttonElement.innerHTML = originalButtonText;
-                if (spinnerElement) {
-                   spinnerElement.style.display = 'none';
-                }
-
-                if (data.status === 'success') {
-                    showAlert( data.message || 'Product added to cart!', 'success');
-                    fetchCartCount();
-                } else {
-                    showAlert(data.message || 'Error adding product to cart.', 'error');
-                }
-            })
-            .catch(error => {
-                buttonElement.disabled = false;
-                buttonElement.innerHTML = originalButtonText;
-                if (spinnerElement) {
-                   spinnerElement.style.display = 'none';
-                }
-                console.error('Error:', error);
-                showAlert('Failed to add product to cart. Please try again.', 'error');
-            });
-        }
-
-        function delete_cart_item(productId) {
-            showLoading();
-            fetch('/delete_cart_item/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    product_id: productId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                if (data.status === 'success') {
-                    showAlert('Item removed from cart!', 'success');
-                    fetchCartCount();
-                    // Example of removing element without full reload, adjust selector if needed
-                    const itemElement = document.querySelector(`.cart-item[data-product-id="${productId}"]`); 
-                    if (itemElement) itemElement.remove();
-                    location.reload(); // Reload for full UI consistency
-                } else {
-                    showAlert(data.message || 'Error removing item.', 'error');
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                console.error('Error:', error);
-                showAlert('Failed to remove item. Please try again.', 'error');
-            });
-        }
-
-        function clearCart() {
-            showLoading();
-            fetch('/clear_cart/', { 
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json', 
-                'X-CSRFToken': getCookie('csrftoken'), 
-                },
-            })
-            .then(response => {
-                hideLoading();
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                showAlert('Cart cleared successfully!', 'success');
-                fetchCartCount();
-                location.reload(); 
-            })
-            .catch(error => {
-                hideLoading();
-                console.error('Error clearing cart:', error);
-                showAlert('Cart cleared successfully!', 'success');
-                location.reload(); 
-            });
-        }
-    
-        function updateCart(action, productId) {
-    fetch('/cart/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            action: action,
-            product_id: productId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            fetchCartCount();
-            window.location.reload(); // simple & safe
-        } else {
-            showAlert(data.message || 'Error updating cart.', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('Failed to update cart. Please try again.', 'error');
-    });
-}
-
     </script>
 </body>
 </html>

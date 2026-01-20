@@ -5,6 +5,7 @@ from .manager import  CustomUserManager
 from django.utils.translation import gettext_lazy as _
 import uuid
 from django.db import transaction
+from pgvector.django import VectorField
 
 
 
@@ -13,7 +14,7 @@ class MyUsers(AbstractBaseUser,PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     created_at  = models.DateTimeField(default=timezone.now)
     is_superuser = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
     objects =  CustomUserManager()
 
@@ -32,6 +33,8 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
+
 class Product(models.Model):
     name = models.CharField(max_length=100)
     category =models.ForeignKey(Category,related_name="products", on_delete=models.DO_NOTHING)
@@ -45,9 +48,14 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/', blank=True, null=True)  # Local file field
     image_url = models.URLField(blank=True, null=True)  # URL of the image on Google Drive
     is_available = models.BooleanField(default=True)
+    embedding = VectorField(dimensions=1536,null=True, blank=True)
     
     def __str__(self):
         return self.name
+    
+    
+
+   
 
     
     class Meta:
@@ -76,10 +84,8 @@ class Cart(models.Model):
     def items_count(self):
         cartItems=self.cartItems.all()
         if cartItems:
-            total = sum(item.quantity for item in cartItems)
-            return total
-        zero=0
-        return zero
+            return  cartItems.count()      
+        return 0
     
     
     

@@ -1,512 +1,195 @@
 {% extends "onlineStore/base.html" %}
 
+{% block title %}{{ product.name }} | Buy It Marketplace{% endblock %}
+
 {% block content %}
-<style>
-:root {
-    --primary: #ff8c00;
-    --primary-dark: #e67600;
-    --bg: #f7f7f9;
-    --card: #ffffff;
-    --text: #1f2937;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --radius: 14px;
-}
+<div class="max-w-7xl mx-auto px-4 py-12">
+    <nav class="mb-8 flex text-sm text-gray-500 font-medium">
+        <a href="{% url 'onlinestore:home' %}" class="hover:text-orange-primary transition">Home</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900 truncate">{{ product.name }}</span>
+    </nav>
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-}
-
-.product-container {
-    max-width: 1200px;
-    margin: 48px auto;
-    background: var(--card);
-    border-radius: var(--radius);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    padding: 32px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-}
-
-.product-gallery {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.main-image {
-    background: #fafafa;
-    border-radius: var(--radius);
-    padding: 20px;
-}
-
-.main-image img {
-    width: 100%;
-    height: 420px;
-    object-fit: contain;
-}
-
-.thumbnail-images {
-    display: flex;
-    gap: 12px;
-}
-
-.thumbnail-images img {
-    width: 72px;
-    height: 72px;
-    object-fit: cover;
-    border-radius: 10px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.2s ease;
-}
-
-.thumbnail-images img:hover,
-.thumbnail-images img.active-thumbnail {
-    border-color: var(--primary);
-    transform: scale(1.05);
-}
-
-.product-details {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.product-title {
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.product-rating {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-}
-
-.stars {
-    color: var(--primary);
-}
-
-.product-price {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.current-price {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary);
-}
-
-.discount-percentage {
-    background: rgba(255,140,0,0.1);
-    color: var(--primary);
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.product-description h3,
-.product-features h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-.product-description p {
-    color: var(--muted);
-    line-height: 1.7;
-}
-
-.color-choices {
-    display: flex;
-    gap: 12px;
-}
-
-.color-option {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    cursor: pointer;
-    transition: transform 0.2s ease, border 0.2s ease;
-}
-
-.color-option.active {
-    border-color: var(--primary);
-    transform: scale(1.1);
-}
-
-.quantity-control {
-    display: inline-flex;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.qty-btn {
-    background: var(--bg);
-    border: none;
-    padding: 10px 14px;
-    cursor: pointer;
-    font-size: 1.2rem;
-}
-
-.qty-input {
-    width: 60px;
-    text-align: center;
-    border: none;
-    font-weight: 600;
-}
-
-.product-actions {
-    display: flex;
-    gap: 16px;
-}
-
-.add-to-cart-button,
-.buy-now {
-    flex: 1;
-    padding: 14px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1rem;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.add-to-cart-button {
-    background: var(--primary);
-    color: #fff;
-}
-
-.add-to-cart-button:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(255,140,0,0.3);
-}
-
-.buy-now {
-    background: #111827;
-    color: #fff;
-}
-
-.buy-now:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-}
-
-.product-features ul {
-    padding-left: 18px;
-    color: var(--muted);
-}
-
-@media (max-width: 900px) {
-    .product-container {
-        grid-template-columns: 1fr;
-        padding: 20px;
-    }
-
-    .main-image img {
-        height: 300px;
-    }
-}
-</style>
-
-
-<div class="product-container">
-    <div class="product-gallery">
-        <div class="main-image">
-            <img src="{{product.image_url}}" alt="Product Main Image" id="main-product-image">
-        </div>
-        <div class="thumbnail-images">
-            {# Using same image for thumbnails for demonstration, replace with actual thumbnail URLs if available #}
-            <img src="{{product.image_url}}" alt="Thumbnail 1" class="active-thumbnail">
-            <img src="https://placehold.co/100x100/A0A0A0/FFFFFF?text=Thumb+2" alt="Thumbnail 2">
-            <img src="https://placehold.co/100x100/B0B0B0/FFFFFF?text=Thumb+3" alt="Thumbnail 3">
-            <img src="https://placehold.co/100x100/C0C0C0/FFFFFF?text=Thumb+4" alt="Thumbnail 4">
-        </div>
-    </div>
-
-    <div class="product-details">
-        <h1 class="product-title">{{product.name}}</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white p-6 md:p-10 rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 cart-item" data-product-id="{{ product.id }}">
         
-        <div class="product-rating">
-            <div class="stars">
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="far fa-star"></i>
+        <div class="space-y-6">
+            <div class="main-image bg-gray-50 rounded-3xl overflow-hidden border border-gray-100 flex items-center justify-center p-4">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" id="main-product-image" 
+                     class="w-full h-[400px] md:h-[500px] object-contain hover:scale-105 transition-transform duration-500">
             </div>
-            <span class="rating-count">(124 reviews)</span>
+            
+            <div class="thumbnail-images flex gap-4 overflow-x-auto pb-2">
+                <img src="{{ product.image_url }}" alt="Main Thumb" 
+                     class="active-thumbnail w-20 h-20 rounded-xl object-cover cursor-pointer border-2 border-orange-primary p-1">
+                <img src="https://placehold.co/100x100/A0A0A0/FFFFFF?text=View+2" class="w-20 h-20 rounded-xl object-cover cursor-pointer border-2 border-transparent hover:border-orange-100 p-1">
+                <img src="https://placehold.co/100x100/B0B0B0/FFFFFF?text=View+3" class="w-20 h-20 rounded-xl object-cover cursor-pointer border-2 border-transparent hover:border-orange-100 p-1">
+            </div>
         </div>
 
-        <div class="product-price">
-            <span class="current-price">₦{{product.price}}</span>
-            {# Updated to use product.original_price. Ensure this is passed from your Django view. #}
-            <span class="discount-percentage">{{product.number_available}} unit left</span>
-        </div>
-
-        <div class="product-description">
-            <h3>Product Description</h3>
-            <p>{{product.description}}</p>
-        </div>
-
-        <div class="product-options">
-            <div class="color-selection">
-                <h3>Color</h3>
-                <div class="color-choices">
-                    <div class="color-option active" data-color="black"></div>
-                    <div class="color-option" data-color="white"></div>
-                    <div class="color-option" data-color="blue"></div>
+        <div class="flex flex-col">
+            <div class="mb-6">
+                <h1 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-2">{{ product.name }}</h1>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center text-orange-primary text-sm">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star text-gray-300"></i>
+                        <span class="ml-2 text-gray-500 font-medium">(124 reviews)</span>
+                    </div>
+                    <span class="text-xs font-bold uppercase tracking-widest px-3 py-1 bg-green-50 text-green-600 rounded-full">
+                        {{ product.category|default:"Verified Item" }}
+                    </span>
                 </div>
             </div>
 
-            <div class="quantity-selector">
-                <h3>Quantity</h3>
-          {% if product.number_available %}
-                <div class="quantity-control">
-                    {# Changed to use classes for event listeners, added spinner #}
-                    <button class="qty-btn minus-qty" data-product-id="{{product.id}}">- <span class="button-spinner"></span></button>
-                    <input type="number" class="qty-input" id="product-quantity-{{product.id}}" 
-                        {% if product_cart_item %} value="{{product_cart_item.quantity}}" {% else %} value="0" {% endif %} min="0"> {# Changed min to 0 #}
-                    {# Changed to use classes for event listeners, added spinner #}
-                    <button class="qty-btn plus-qty" data-product-id="{{product.id}}">+<span class="button-spinner"></span></button>
+            <div class="flex items-baseline gap-4 mb-8">
+                <span class="text-4xl font-black text-orange-primary">₦{{ product.price }}</span>
+                <span class="item-total-price hidden">₦{{ product.price }}</span>
+                <span class="text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                    {{ product.number_available }} units left
+                </span>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-sm font-black uppercase tracking-widest text-gray-400 mb-3">Product Description</h3>
+                <p class="text-gray-600 leading-relaxed">{{ product.description }}</p>
+            </div>
+
+            <div class="space-y-6 mb-10">
+               <div class="inline-flex items-center bg-gray-100 rounded-2xl p-1 relative">
+                    <button class="qty-btn minus-qty w-10 h-10 flex items-center justify-center font-bold text-xl hover:text-orange-primary transition relative">
+                        <span class="btn-text">−</span>
+                        <span class="qty-spinner hidden absolute w-4 h-4 border-2 border-orange-primary/30 border-t-orange-primary rounded-full animate-spin"></span>
+                    </button>
+                    
+                    <span id="product-quantity-{{product.id}}" class="qty-value w-12 text-center font-black text-lg">
+                        {% if product_cart_item %}{{product_cart_item.quantity}}{% else %}0{% endif %}
+                    </span>
+
+                    <button class="qty-btn plus-qty w-10 h-10 flex items-center justify-center font-bold text-xl hover:text-orange-primary transition relative">
+                        <span class="btn-text">+</span>
+                        <span class="qty-spinner hidden absolute w-4 h-4 border-2 border-orange-primary/30 border-t-orange-primary rounded-full animate-spin"></span>
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <div class="product-actions">
-            {# Updated button to use class and data-attribute for JS handling, added spinner #}
-            <button class="add-to-cart-button" id="add-to-cart-btn" data-product-id="{{product.id}}">
-                <i class="fas fa-shopping-cart"></i> Add to Cart <span class="button-spinner" style="display: none;"></span>
-            </button>
-            <button class="buy-now">Buy Now</button>
-        </div>
-        {% else %}
-           {# Updated button to use class and data-attribute for JS handling, added spinner #}
-            <button class="add-to-cart-button" id="add-to-cart-btn" disabled data-product-id="{{product.id}}">
-                <i class="fas fa-shopping-cart"></i> Product Sold-out <span class="button-spinner" ></span>
-            </button>
-        {% endif %}
-
-        <div class="product-features">
-            <h3>Key Features</h3>
-            <ul>
-                <li>Wireless Bluetooth 5.0</li>
-                <li>Noise Cancellation</li>
-                <li>20-Hour Battery Life</li>
-                <li>Comfortable Over-Ear Design</li>
-            </ul>
+            <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                {% if product.number_available %}
+                <button id="add-to-cart-btn" data-product-id="{{product.id}}"
+                        class="flex-1 bg-orange-primary text-white py-4 rounded-2xl font-black text-lg hover-orange transition-all shadow-lg shadow-orange-100 active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Add to Cart</span>
+                    <span class="button-spinner hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                </button>
+                <button class="flex-1 bg-gray-900 text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition-all shadow-lg active:scale-95">
+                    Buy Now
+                </button>
+                {% else %}
+                <button disabled class="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl font-black text-lg cursor-not-allowed italic">
+                    Currently Out of Stock
+                </button>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const productId = {{ product.id }};
-        const productQuantityInput = document.getElementById(`product-quantity-${productId}`);
-
-        // Add a check to ensure the input element is found
-        if (!productQuantityInput) {
-            console.error(`Error: Quantity input element with ID 'product-quantity-${productId}' not found.`);
-            return; // Exit if element not found to prevent further errors
-        }
-
+        const productId = "{{ product.id }}";
+        const productQuantityDisplay = document.getElementById(`product-quantity-${productId}`);
         const addToCartButton = document.getElementById('add-to-cart-btn');
-        const addToCartButtonSpinner = addToCartButton.querySelector('.button-spinner');
 
-        // Store original button content to revert to it
-        const originalAddToCartButtonContent = addToCartButton.innerHTML;
+        if (!addToCartButton) return;
 
-        // Initial state of "Add to Cart" button based on current quantity
-        function updateAddToCartButtonState() {
-            if (parseInt(productQuantityInput.value) > 0) {
-                // Keep the original content but update text
-                addToCartButton.innerHTML = `<i class="fas fa-shopping-cart"></i> Added to Cart <span class="button-spinner" style="display: none;"></span>`;
-                addToCartButton.classList.add('added'); 
-            } else {
-                addToCartButton.innerHTML = originalAddToCartButtonContent; // Revert to initial "Add to Cart"
-                addToCartButton.classList.remove('added');
-            }
-            addToCartButton.disabled = false; // Ensure it's enabled after state update
-            addToCartButtonSpinner.style.display = 'none';
-        }
+        const spinner = addToCartButton.querySelector('.button-spinner');
+        const btnText = addToCartButton.querySelector('span');
 
-        // --- Thumbnail Image Gallery Logic ---
-        const mainProductImage = document.getElementById('main-product-image');
-        const thumbnailImages = document.querySelectorAll('.thumbnail-images img');
-
-        thumbnailImages.forEach(thumbnail => {
-            thumbnail.addEventListener('click', () => {
-                // Remove active class from all thumbnails
-                thumbnailImages.forEach(img => img.classList.remove('active-thumbnail'));
-                // Add active class to the clicked thumbnail
-                thumbnail.classList.add('active-thumbnail');
-                // Change main image source
-                mainProductImage.src = thumbnail.src;
+        // Thumbnail Click Logic
+        const mainImg = document.getElementById('main-product-image');
+        document.querySelectorAll('.thumbnail-images img').forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                mainImg.src = thumb.src;
+                document.querySelectorAll('.thumbnail-images img').forEach(t => t.classList.remove('border-orange-primary'));
+                thumb.classList.add('border-orange-primary');
             });
         });
 
-        // --- Add to Cart Button Click Handler ---
+        // Add to Cart
         addToCartButton.addEventListener('click', function() {
-            // Check if product quantity is 0, if so, set to 1 for adding to cart
-            if (parseInt(productQuantityInput.value) === 0) {
-                productQuantityInput.value = 1;
-            }
-            const quantityToAdd = parseInt(productQuantityInput.value);
-
-            // Disable button and show spinner (without changing text)
+            const originalText = btnText.innerHTML;
             addToCartButton.disabled = true;
-            if (addToCartButtonSpinner) {
-               addToCartButtonSpinner.style.display = 'inline-block';
+            spinner.classList.remove('hidden');
+            spinner.style.display = 'inline-block';
+            
+            // Reusing addItem from base.html
+            addItem(productId, addToCartButton, originalText, spinner);
+        });
+
+        // --- QUANTITY BUTTONS LOGIC ---
+    document.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const container = this.closest('.cart-item');
+            const quantitySpan = container.querySelector('.qty-value');
+            const itemSumPriceDisplay = container.querySelector('.item-total-price');
+            const spinner = this.querySelector('.qty-spinner');
+            const btnText = this.querySelector('.btn-text');
+            
+            const action = this.classList.contains('plus-qty') ? 'increment' : 'decrement';
+
+            if (action === 'decrement' && parseInt(quantitySpan.textContent) <= 1) {
+                showAlert("Minimum quantity is 1", "info");
+                return;
             }
 
-            // Call the modified addItem function
-            addItemForProductPage(productId, quantityToAdd, addToCartButton, addToCartButtonSpinner);
+            // Start Loading State
+            this.disabled = true;
+            this.classList.add('opacity-50');
+            if(spinner) spinner.classList.remove('hidden');
+            if(btnText) btnText.classList.add('hidden');
+
+            updateCartx(action, productId, this, quantitySpan, itemSumPriceDisplay, spinner, btnText);
         });
+    });
 
-        // --- Quantity Control Buttons Logic ---
-        document.querySelectorAll('.qty-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                let currentQuantity = parseInt(productQuantityInput.value);
-                console.log('Initial quantity:', currentQuantity); // Debugging log
-                const action = this.classList.contains('plus-qty') ? 'increment' : 'decrement';
-                const buttonElement = this;
-                const spinner = buttonElement.querySelector('.button-spinner');
+    function updateCartx(action, productId, buttonElement, quantitySpan, itemSumPriceDisplay, spinner, btnText) {
+        fetch('/cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ action: action, product_id: productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // End Loading State
+            buttonElement.disabled = false;
+            buttonElement.classList.remove('opacity-50');
+            if(spinner) spinner.classList.add('hidden');
+            if(btnText) btnText.classList.remove('hidden');
 
-                // Disable button and show spinner
-                buttonElement.disabled = true;
-                if (spinner) spinner.style.display = 'inline-block';
-
-                if (action === 'increment') {
-                    currentQuantity++;
-                } else if (action === 'decrement' && currentQuantity > 0) {
-                    currentQuantity--;
+            if (data.status === 'success') {
+                const newQty = data.new_quantity || data.quantity;
+                if (newQty !== undefined) {
+                    quantitySpan.textContent = newQty;
                 }
-
-                // If quantity goes to 0 or less, ensure it's handled as a "remove"
-                if (currentQuantity < 0) currentQuantity = 0; // Prevent negative quantities
-                console.log('Calculated new quantity before sending:', currentQuantity, 'Action:', action); // Debugging log
-
-                // Update the input field immediately for visual feedback
-                productQuantityInput.value = currentQuantity;
-
-                // Call the modified updateCart function
-                updateCartForProductPage(action, productId, currentQuantity, buttonElement, spinner);
-            });
+                if (itemSumPriceDisplay && data.new_item_sum_price) {
+                    itemSumPriceDisplay.textContent = `₦${data.new_item_sum_price}`;
+                }
+                fetchCartCount(); 
+            } else {
+                showAlert(data.message || 'Update failed', 'error');
+            }
+        })
+        .catch(error => {
+            buttonElement.disabled = false;
+            buttonElement.classList.remove('opacity-50');
+            if(spinner) spinner.classList.add('hidden');
+            if(btnText) btnText.classList.remove('hidden');
+            showAlert('Network error. Please try again.', 'error');
         });
+    }
 
-        // --- Overridden/Adapted Functions for this page ---
-        // These functions are designed to specifically update the UI of THIS product page.
-        // They assume showAlert, hideLoading, showLoading, fetchCartCount, getCookie are available in base.html.
-
-        function addItemForProductPage(productId, quantity, buttonElement, spinnerElement) {
-            console.log('Sending Add to Cart to backend:', { product_id: productId, quantity: quantity }); // Debugging log
-            fetch('/add_to_cart/', { // Your Django URL for adding to cart
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: quantity // Send the desired quantity
-                })
-            })
-            .then(response => {
-                console.log('Raw response (Add to Cart):', response); // Debugging log
-                return response.json();
-            })
-            .then(data => {
-                console.log('Parsed response data (Add to Cart):', data); // Debugging log
-                if (data.status === 'success') {
-                    showAlert(data.message || 'Product added to cart!', 'success');
-                    fetchCartCount(); // Update global cart badge
-                    // Update input with actual quantity, as backend might adjust it (e.g., stock limits)
-                    productQuantityInput.value = data.new_quantity || quantity; 
-                } else {
-                    showAlert(data.message || 'Error adding product to cart.', 'error');
-                }
-                // Ensure button is re-enabled and spinner hidden on completion/error
-                buttonElement.disabled = false;
-                if (spinnerElement) spinnerElement.style.display = 'none';
-                updateAddToCartButtonState(); // Update button text based on final quantity
-            })
-            .catch(error => {
-                // Ensure button is re-enabled and spinner hidden on error
-                buttonElement.disabled = false;
-                if (spinnerElement) spinnerElement.style.display = 'none';
-                console.error('Error (Add to Cart):', error);
-                showAlert('Failed to add product to cart. Please try again.', 'error');
-                updateAddToCartButtonState(); // Revert button state on error
-            });
-        }
-
-        function updateCartForProductPage(action, productId, newQuantity, buttonElement, spinnerElement) {
-            console.log('Sending Update Cart to backend:', { action, product_id: productId, quantity: newQuantity }); // Debugging log
-            fetch('/cart/', { // Your Django URL for updating cart
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    action: action,
-                    product_id: productId,
-                    quantity: newQuantity // Send the new desired quantity
-                })
-            })
-            .then(response => {
-                console.log('Raw response (Update Cart):', response); // Debugging log
-                return response.json();
-            })
-            .then(data => {
-                console.log('Parsed response data (Update Cart):', data); // Debugging log
-                buttonElement.disabled = false;
-                if (spinnerElement) spinnerElement.style.display = 'none';
-
-                if (data.status === 'success') {
-                    showAlert(data.message || 'Cart updated successfully!', 'success');
-                    fetchCartCount(); // Update global cart badge
-                    productQuantityInput.value = data.new_quantity; // Update input with actual quantity from backend
-                    updateAddToCartButtonState(); // Update Add to Cart button based on new quantity
-                    
-                    // If the item quantity is reduced to 0 and the item is removed from cart,
-                    // the product page's quantity input should reflect this.
-                    if (data.new_quantity === 0) {
-                        productQuantityInput.value = 0;
-                    }
-
-                } else {
-                    showAlert(data.message || 'Error updating cart.', 'error');
-                    // Revert quantity if update failed (consider storing original quantity before fetch)
-                }
-            })
-            .catch(error => {
-                buttonElement.disabled = false;
-                if (spinnerElement) spinnerElement.style.display = 'none';
-                console.error('Error:', error);
-                showAlert('Failed to update cart. Please try again.', 'error');
-            });
-        }
-
-        // Call this on load to set initial button state
-        updateAddToCartButtonState();
+     
     });
 </script>
-
 {% endblock %}

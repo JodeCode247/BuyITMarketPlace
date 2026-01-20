@@ -1,0 +1,64 @@
+
+
+
+ {% for product in products %} 
+        <div class="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full">
+            
+            <div class="relative aspect-square overflow-hidden bg-gray-50">
+                <img src="{{ product.image_url }}" 
+                     alt="{{ product.name }}" 
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                
+                {% if not product.number_available %}
+                <div class="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
+                    <span class="bg-gray-800 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Sold Out</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="p-5 flex flex-col flex-grow">
+                <div class="flex-grow">
+                    <a href='{% url "onlinestore:products_description" product.id %}' class="block">
+                        <h3 class="text-lg font-bold text-gray-800 group-hover:text-orange-primary transition-colors line-clamp-1">
+                            {{ product.name }}
+                        </h3>
+                    </a>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="text-2xl font-black text-gray-900">₦{{ product.price }}</span>
+                    </div>
+                    <p class="text-xs font-semibold text-gray-400 mt-2 uppercase tracking-wide">
+                        Stock: <span class="{% if product.number_available < 5 %}text-red-500{% else %}text-green-500{% endif %}">
+                            {{ product.number_available }} left
+                        </span>
+                    </p>
+                </div>
+
+                <div class="mt-6">
+                    {% if product.number_available %}
+                    <button class="add-to-cart-button w-full bg-orange-primary text-white py-3 rounded-xl font-bold hover-orange shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2 active:scale-95" 
+                            data-product-id="{{ product.id }}">
+                        <i class="fas fa-shopping-cart text-sm"></i>
+                        <span>Add to Cart</span>
+                        <div class="button-spinner hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </button>
+                    {% else %}
+                    <button class="w-full bg-gray-100 text-gray-400 py-3 rounded-xl font-bold cursor-not-allowed italic text-sm" disabled>
+                        Out of Stock
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not products %}
+             <div class="col-span-full py-20 text-center">
+                <div class="text-gray-400 mb-4">
+                    <svg class="mx-auto h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-medium text-gray-900">No products found</h3>
+                <p class="text-gray-500">Try adjusting your AI search to be more general.</p>
+                <a href="/" class="mt-6 inline-block bg-orange-primary text-white px-6 py-2 rounded-full hover-orange">Back to Home</a>
+            </div>
+        
+        {% endif %}

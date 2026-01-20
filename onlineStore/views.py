@@ -13,9 +13,9 @@ from .handler import upload_to_drive, merge_carts
 from django.conf import settings
 from . import paystack
 from django.db import transaction
-from PIL import Image, ImageChops, ImageEnhance # Pillow library for image processing
-from io import BytesIO # For handling image data in memory
-import base64 # For encoding image data to send to HTML
+from .smart import ai_search , get_embedding ,manual_search_fallback
+from pgvector.django import CosineDistance
+
 
 def test_func(user):
         return user.is_authenticated # example.
@@ -26,41 +26,68 @@ def get_cart_count(request):
     cart = get_cart(request)
     if cart:
         count = cart.items_count
-    else:
-        count = 0
     return JsonResponse({'count': count})
 
+from django.db.models import Q
+from django.shortcuts import render
+from pgvector.django import CosineDistance 
 
-def index(request):        
-    if request.method == 'GET':
-        query = request.GET.get('query')
-        if query:
-        
-            products = Product.objects.filter(Q(name__icontains=query)
-                                            | Q(price__icontains=query)
-                                            | Q(category__name__icontains=query)
-                                            | Q(description__icontains=query)).values()
-            if products.exists():
-                context = {'products': products}
-                return render(request, 'onlineStore/index.html', context)
-        
-            else:
-                print("ITEM NOT FOUND")
-                messages.error(request, 'No products found matching your search.')
-                return redirect('onlinestore:home')
-            
-    try:
-        products = Product.objects.only('name')
-
-    except:
-       return HttpResponse("error")
-    #    return redirect('onlinestore:login_user')
+def index(request):
+    query = request.GET.get('query', '').strip()
+    products = Product.objects.all()
+    parsed_data = None
     
+    if query:
+        word_count = len(query.split())
+        has_numbers = any(char.isdigit() for char in query)
+
+        # 1. LIGHTWEIGHT SEARCH: For simple queries like "Shoes" or "Apple"
+        if word_count <= 2 and not has_numbers:
+            products = products.filter(
+                Q(name__icontains=query) | 
+                Q(category__name__icontains=query)
+            )
         
+        # 2. AI & SEMANTIC SEARCH: For complex queries like "Nike under 50k"
+        else:
+            parsed_data = ai_search(query)
+            
+            if parsed_data:
+                search_term = parsed_data.get('search_term', query)
+                max_price = parsed_data.get('max_price')
+                brand = parsed_data.get('brand')
 
-    context = {'products':products}
-    return render(request,"onlineStore/index.html",context)
+                # Apply hard filters first (Price and Brand)
+                if max_price:
+                    products = products.filter(price__lte=max_price)
+                if brand:
+                    products = products.filter(name__icontains=brand)
+                
+            else:
+                fall_search =manual_search_fallback(query)
+                max_price = fall_search.get('max_price')
+                search_term = fall_search.get('search_term')
+                print(search_term)
+                if search_term:
+                    products = products.filter(
+            Q(name__icontains=search_term) | 
+            Q(category__name__icontains=search_term)
+        )
+                if max_price:
+                    products = products.filter(price__lte=max_price)
+    # Final limit for performance
+    products = products[:24]
 
+    context = {
+        'products': products,
+        'query': query,
+        'parsed_data': parsed_data
+    }
+
+    if request.headers.get('HX-Request'):
+        return render(request, 'onlineStore/partials/product_list.html', context)
+    
+    return render(request, 'onlineStore/index.html', context)
 
 @csrf_exempt
 def add_to_cart(request):
@@ -82,7 +109,7 @@ def add_to_cart(request):
                                 return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
                             cart_item.quantity+=1
                             cart_item.save()
-                            return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
+                            return JsonResponse({'status': 'success', 'message': 'Product added to cart'},status=200)
                         else:
                             return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
 
@@ -115,60 +142,68 @@ def get_cart(request):
             request.session['cart_id'] = str(cart.cart_id)
     return cart
 
+import json
+from django.http import JsonResponse
+from .models import Product, CartItems # Ensure correct imports
+
 @csrf_protect 
 def viewCart(request):
     cart = get_cart(request)
     
-    if request.method=='POST':
+    if request.method == 'POST':
         try:  
             data = json.loads(request.body)
             product_id = data.get('product_id')
             action = data.get('action')
-            print(data)
             product = Product.objects.get(pk=product_id)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except (json.JSONDecodeError, Product.DoesNotExist):
+            return JsonResponse({'status': 'error', 'message': 'Invalid data or product'}, status=400)
             
-        try:
-            cart_item = CartItems.objects.get(cart=cart,product=product)
-            
-            if action=="decrement":
-                if cart_item.quantity >= 1:
-                    cart_item.quantity-=1
-                    cart_item.save()
-                    return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
+        cart_item, created = CartItems.objects.get_or_create(cart=cart, product=product)
 
-
-            elif action=='increment':
-                if cart_item.quantity <= cart_item.product.number_available :
-                    if cart_item.product.number_available == cart_item.quantity:
-                        return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
-                    cart_item.quantity+=1
-                    cart_item.save()
-                    return JsonResponse({'status': 'success', 'message': 'Quantity incremented'},status=400)
-                else:
-                    return JsonResponse({'status': 'error', 'message': 'product number exceeeded'}, status=400)
-            
+        if action == "decrement":
+            if cart_item.quantity > 0:
+                cart_item.quantity -= 1
+                cart_item.save()
+            if cart_item.quantity == 0:
+                cart_item.delete()
+                new_qty = 0
             else:
-                return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
+                new_qty = cart_item.quantity
 
-        except CartItems.DoesNotExist:
-
-            return HttpResponse(request,"cart not found")
-
+        elif action == 'increment':
+            print(cart_item.quantity )
+            if cart_item.quantity >= product.number_available and not created:
+                return JsonResponse({'status': 'error', 'message': 'items limit reached'}, status=400)
             
+            cart_item.quantity += 1
+            cart_item.save()
+            new_qty = cart_item.quantity
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Unknown action'}, status=400)
+
+        # CRITICAL: Calculate new values for the frontend AJAX update
+        # Assuming your CartItem model has a sum_price property and Cart has total_price
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Cart updated',
+            'new_quantity': new_qty,
+            'new_item_sum_price': cart_item.sum_price if new_qty > 0 else 0,
+            'new_total_price': cart.total_price # Uses the property in your Cart model
+        }, status=200)
+
+    # GET logic
+    if cart:
+        cart_items = cart.cartItems.all()
+        total_price = cart.total_price
+        context = {
+            "total_price": total_price,
+            'cart_items': cart_items,
+            "cart_id": cart.id
+        }
+        return render(request, "onlineStore/cart.html", context)
     
-    if cart :
-            cart_items =cart.cartItems.all()
-
-            total_price=cart.total_price
-            cart_id=cart.id
-
-            
-            context ={"total_price":total_price,'cart_items':cart_items,"cart_id":cart_id}
-            return render(request,"onlineStore/cart.html",context)
-       
+    return render(request, "onlineStore/cart.html", {"cart_items": [], "total_price": 0}) 
 
 @csrf_protect # Enable CSRF protection
 def delete_cart_item(request):
@@ -209,8 +244,7 @@ def products_description(request,id):
 
         try:
             product_cart_item = CartItems.objects.get(product=product,cart=cart)
-            
-    
+               
         except CartItems.DoesNotExist:
             product_cart_item =''
         
@@ -384,75 +418,144 @@ def orders(request):
     return render(request, 'onlineStore/orders.html', context)
 
 
+from django.db import IntegrityError
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+
 def register_user(request):
-    if request.method=='POST':
-        username = request.POST.get('username').upper()
-        password = request.POST.get('password')
-        password2 = request.POST.get('password2')
-        email = request.POST.get('email')
-        if password2==password:
-            try:
-                created = MyUsers.objects.get(email=email)
-                if created:
-                    messages.success(request, ' EMAIL IS NO LONGER AVAILABLE ENTER ANOTHER EMAIL')
-                    return redirect('onlinestore:register')
-            
-            except:
-                user= MyUsers.objects.create_user(username=username,email=email,password=password,is_staff=True,is_active=True)
-                if user:
-                    messages.success(request, 'User registered successfully! PLEASE LOGIN NOW')
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip().upper()
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+        password2 = request.POST.get('password2', '')
 
-                    return redirect('onlinestore:login_user')
-            else:
-                 messages.success(request, 'ERROR OCCURED SIGNUP FAILED')
-                 return redirect('onlinestore:register')
-
-
-        else:
-            messages.success(request, 'PASSWORD MISMATCH')
+        # 2. Input Validation (Security Barrier)
+        if not all([username, email, password,password2]):
+            messages.error(request, 'All fields are required.')
             return redirect('onlinestore:register')
 
-    return render (request,'userform.html')
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, 'Please enter a valid email address.')
+            return redirect('onlinestore:register')
+
+        if password != password2:
+            messages.error(request, 'Passwords do not match.')
+            return redirect('onlinestore:register')
+
+        if len(password) < 8:
+            messages.error(request, 'Password must be at least 8 characters.')
+            return redirect('onlinestore:register')
+
+        # 3. Secure Account Creation
+        try:
+            # Check if user exists without revealing it (prevents enumeration)
+            if MyUsers.objects.filter(email=email).exists() or MyUsers.objects.filter(username=username).exists():
+                messages.error(request, 'That username or email is already taken.')
+                return redirect('onlinestore:register')
+
+            user = MyUsers.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            
+            messages.success(request, 'Registration successful! Please login.')
+            return redirect('onlinestore:login_user')
+
+        except IntegrityError:
+            messages.error(request, 'A database error occurred. Please try again.')
+            return redirect('onlinestore:register')
+        except Exception as e:
+            print(f"CRITICAL ERROR: {e}")
+            messages.error(request, 'An unexpected error occurred.')
+            return redirect('onlinestore:register')
+    return render(request, 'userform.html')
 
 
-@csrf_protect # Enable CSRF protection
+@csrf_protect
 def clear_cart(request):
     if request.method == 'POST':
         cart = get_cart(request)
         if cart:
-            cart_items = cart.cartItems.all()
-            cart_items.delete()
-            return redirect('onlinestore:cart') # Redirect to the cart page
-        else:
-            return redirect('onlinestore:home') #Cart not found, redirect to home.
-    return redirect('onlinestore:cart') #if not a post request, redirect to cart
+            cart.cartItems.all().delete()       
+            return JsonResponse({'status': 'success', 'message': 'Cart cleared'})
+        
+        return JsonResponse({'status': 'error', 'message': 'Cart not found'}, status=404)
+    
+    return redirect('onlinestore:cart')
 
 
+from django.contrib import messages, auth
+from django.core.cache import cache
+from django.views.decorators.debug import sensitive_post_parameters
+
+@sensitive_post_parameters('password')
+@csrf_protect
 def login_user(request):
-    if request.method=='POST':
-        password = request.POST.get('password')
-        email = request.POST.get('username')
-        if password and email: 
-            try:
-                user=MyUsers.objects.get(email=email)
-            except MyUsers.DoesNotExist:
-                 messages.success(request,'User not found')
-                 return redirect('onlinestore:login_user')
-            
-            if user.check_password(password):
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend') #specify the backend.
-                merge_carts(request, user)
-                messages.success(request,'you are logged in')
-                return redirect('onlinestore:home')
-            else:
-                messages.error(request, 'Invalid email or password.') # Generic error for security
-                return redirect('onlinestore:login_user')
-        else:
+    if request.user.is_authenticated:
+        return redirect('onlinestore:home')
+
+    next_url = request.GET.get('next', 'onlinestore:home')
+
+    if request.method == 'POST':
+        email = request.POST.get('username', '').strip().lower()
+        password = request.POST.get('password', '')
+
+        if not email or not password:
             messages.error(request, 'Please provide both email and password.')
             return redirect('onlinestore:login_user')
+        
+        # # Security: Get real IP even if behind a proxy (like Heroku/NGINX)
+        # x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        # if x_forwarded_for:
+        #     ip_address = x_forwarded_for.split(',')[0]
+        # else:
+        #     ip_address = request.META.get('REMOTE_ADDR')
+
+        # lockout_key = f"lockout_{ip_address}"
+        # attempts_key = f"attempts_{ip_address}"
+        
+        # if cache.get(lockout_key):
+        #     messages.error(request, 'Too many failed attempts. Please try again in 10 minutes.')
+        #     return redirect('onlinestore:login_user')
+    
+        user=MyUsers.objects.filter(email=email).first()
+
+        if user and user.check_password(password):
+            if user.is_active:
+                # cache.delete(attempts_key)
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
+                auth.login(request, user)
                 
-    debug_check = settings.DEBUG   
-    return render (request,'userform.html',{"debug_check":debug_check})
+                merge_carts(request, user)
+                
+                messages.success(request, f'Welcome back, {user.username}!')
+                
+                # Redirect to 'next' if it exists and is a safe internal URL
+                if next_url and next_url.startswith('/'):
+                    return redirect(next_url)
+                return redirect('onlinestore:home')
+            else:
+                messages.error(request, 'This account has been disabled.')
+                return redirect('onlinestore:login_user')
+    #     else:
+    #         fail_count = cache.get(attempts_key, 0) + 1
+    #         cache.set(attempts_key, fail_count, timeout=600)
+
+    #         if fail_count >= 5:
+    #             cache.set(lockout_key, True, timeout=600)
+    #             messages.error(request, 'Security Lockout: Too many attempts. Try again in 10 minutes.')
+    #         else:
+    #             messages.error(request, 'Invalid email or password.')
+            
+    #         return redirect('onlinestore:login_user')
+
+    return render(request, 'userform.html', {
+        "debug_check": settings.DEBUG,
+        "next": next_url
+    })
 
 
 def logout_user(request):
@@ -462,149 +565,4 @@ def logout_user(request):
 
 
 
-
-
-def analyze_ela(image_input, quality=90, enhancement_factor=5.0):
-    """
-    Performs Error Level Analysis (ELA) on a JPEG image to detect potential tampering.
-
-    ELA works by re-saving a JPEG image at a specified quality and then
-    comparing the re-saved image to the original. Areas that have been
-    manipulated will show a different error level (appear brighter)
-    because they have a different compression history.
-
-    Args:
-        image_input: The input image. Can be a file path (str), a file-like object
-                     (e.g., from request.FILES['image_field'].file in Django),
-                     or a PIL.Image.Image object.
-        quality (int, optional): The JPEG compression quality level (0-100)
-                                 to use when re-saving the image. A value
-                                 around 90-95 is often good for highlighting differences.
-                                 Defaults to 90.
-        enhancement_factor (float, optional): A factor to multiply the pixel
-                                              differences by, to make them more
-                                              visible. Higher values mean more contrast.
-                                              Defaults to 5.0.
-
-    Returns:
-        tuple: A tuple containing:
-            - PIL.Image.Image: An ELA image where altered areas appear brighter.
-            - float: A "tampering indicator" percentage (0-100) based on average ELA brightness.
-                     Returns None for both if an error occurs.
-    """
-    original = None
-    try:
-        if isinstance(image_input, Image.Image):
-            original = image_input.convert("RGB")
-        else: # Assume file-like object (e.g., from Django's InMemoryUploadedFile)
-            original = Image.open(image_input).convert("RGB")
-
-        # Save the original image to an in-memory buffer to apply compression
-        original_buffer = BytesIO()
-        original.save(original_buffer, format="JPEG", quality=quality)
-        original_buffer.seek(0) # Rewind the buffer to the beginning
-
-        # Re-open the image from the in-memory buffer to get the re-compressed version
-        ela_image = Image.open(original_buffer).convert("RGB")
-
-        # Calculate the absolute difference between the original and re-saved image
-        diff = ImageChops.difference(original, ela_image)
-
-        # Enhance the difference image to make ELA results more visible
-        diff = diff.convert("L") # "L" mode for grayscale
-        enhancer = ImageEnhance.Brightness(diff)
-        diff = enhancer.enhance(enhancement_factor)
-
-        # Calculate a "tampering indicator" percentage
-        # Get the histogram of the grayscale difference image
-        # The histogram is a list of pixel counts for each intensity value (0-255)
-        hist = diff.histogram()
-        
-        # Calculate the total number of pixels
-        total_pixels = sum(hist)
-        
-        # Calculate the sum of all pixel values (intensity * count)
-        # Max possible pixel value is 255 (white in grayscale)
-        sum_pixel_values = sum(i * count for i, count in enumerate(hist))
-        
-        # Calculate the average pixel value
-        average_pixel_value = sum_pixel_values / total_pixels if total_pixels > 0 else 0
-        
-        # Normalize to a percentage (0-100) based on max possible average brightness (255)
-        tampering_indicator_percentage = (average_pixel_value / 255.0) * 100
-
-        return diff, tampering_indicator_percentage
-
-    except Exception as e:
-        print(f"An error occurred during ELA analysis: {e}")
-        return None, None
-# --- End of analyze_ela function ---
-
-
-def ela_upload_view(request):
-    """
-    Handles image upload for Error Level Analysis (ELA).
-    - GET: Displays the upload form.
-    - POST: Processes the uploaded image, performs ELA, and displays the result.
-    """
-    ela_result_base64 = None
-    original_image_base64 = None
-    error_message = None
-    tampering_percentage = None # Initialize tampering percentage
-
-    if request.method == 'POST':
-        if 'image_file' in request.FILES:
-            uploaded_file = request.FILES['image_file']
-
-            # More robust validation for JPEG content types
-            # Common MIME types for JPEG are image/jpeg and sometimes image/jpg
-            # Using 'in' to catch variations, but 'image/jpeg' is the standard.
-            if 'jpeg' not in uploaded_file.content_type and 'jpg' not in uploaded_file.content_type:
-                error_message = "Please upload a JPEG (.jpg or .jpeg) image for ELA."
-            else:
-                try:
-                    # Read the uploaded file's content directly into BytesIO
-                    image_data_for_ela = BytesIO(uploaded_file.read())
-
-                    # Create a separate BytesIO for the original image display
-                    # This ensures the original_image_data is not consumed by analyze_ela
-                    uploaded_file.seek(0) # Rewind the original uploaded file stream
-                    original_image_display_data = BytesIO(uploaded_file.read())
-
-                    # Open the original image for display later (as PNG for broader browser support)
-                    original_image = Image.open(original_image_display_data).convert("RGB")
-                    original_image_buffer = BytesIO()
-                    original_image.save(original_image_buffer, format="PNG")
-                    original_image_base64 = base64.b64encode(original_image_buffer.getvalue()).decode('utf-8')
-                    original_image_buffer.close()
-
-                    # Perform ELA using the BytesIO object
-                    # The analyze_ela function will now return both the image and the percentage
-                    ela_image, percentage = analyze_ela(image_data_for_ela, quality=90, enhancement_factor=10.0)
-
-                    if ela_image:
-                        # Convert the ELA result image to base64 for embedding in HTML
-                        ela_buffer = BytesIO()
-                        ela_image.save(ela_buffer, format="PNG") # Save ELA result as PNG
-                        ela_result_base64 = base64.b64encode(ela_buffer.getvalue()).decode('utf-8')
-                        ela_buffer.close()
-                        
-                        tampering_percentage = f"{percentage:.2f}" # Format to 2 decimal places
-                    else:
-                        error_message = "Failed to perform ELA. Please check the image or try a different one."
-
-                except Exception as e:
-                    error_message = f"An unexpected error occurred during image processing: {e}"
-                    print(f"Error processing ELA upload: {e}")
-        else:
-            error_message = "No image file was uploaded. Please select a file."
-
-    context = {
-        'ela_result_base64': ela_result_base64,
-        'original_image_base64': original_image_base64,
-        'error_message': error_message,
-        'tampering_percentage': tampering_percentage, # Pass the percentage to the template
-    }
-    
-    return render(request,"onlineStore/ela_upload_form.html",context)
 

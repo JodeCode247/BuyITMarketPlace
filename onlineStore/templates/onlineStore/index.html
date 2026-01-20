@@ -1,38 +1,70 @@
 {% extends "onlineStore/base.html" %}
 
 {% block content %}
-<div class="products">
-    <div class="search-bar">
-        <form action="" method="get">
-            <span onclick="toggleMenu()"><strong>☰</strong></span>
-            <input class="bar" type="text" placeholder="Search products.." name='query'>
-            <button type="submit" class="btn"><i class="fas fa-search"></i></button> {# Using search icon for clarity #}
-        </form>
-    </div>
-    <h2>Browse Products</h2>
-    <div class="product-grid">
-        {% for product in products %} 
-        <div class="product">
-            <img src="{{product.image_url}}" alt="item {{product.id}}">
-            <div class="product-info"> {# Added div for consistent styling #}
-                <a href='{% url "onlinestore:products_description" product.id %}'><h3>{{product.name}}</h3></a>
-                <p>₦{{product.price}}</p>
-                <p>QTY - {{product.number_available}}</p>
-                
-                
+<div class="max-w-7xl mx-auto px-4 py-6">
+    
+    <div class="mb-10">
+        <form action="" method="get" class="relative max-w-2xl mx-auto flex items-center gap-2">
+            <button type="button" onclick="toggleMenu()" class=" p-3 text-gray-500 hover:text-orange-primary">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            
+            <div class="relative flex-grow">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </span>
+                <input type="text" 
+                       name="query" 
+                       placeholder="Ask the AI: 'Looking for Nike shoes under 50k'..." 
+                       class="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-100 rounded-2xl focus:border-orange-primary focus:ring-0 transition-all outline-none shadow-sm text-sm"
+                       value="{{ request.GET.query|default:'' }}">
             </div>
-            {# Updated button to use class and data-attribute for JS handling #}
-            {% if product.number_available %}
-            <button class="add-to-cart-button" data-product-id="{{product.id}}">            
-                Add to Cart <span class="button-spinner" style="display: none;"></span>               
+            <button type="submit" class="bg-orange-primary text-white px-6 py-3 rounded-2xl font-bold hover-orange shadow-md transition-all active:scale-95">
+                Search
             </button>
-            {% else %}
-            <button class="add-to-cart-button" disabled data-product-id="{{product.id}}">            
-                 Product Sold-out  <span class="button-spinner"></span>               
-            </button>
-            {% endif %}
+        </form>
+
+        {% if request.GET.query %}
+        <div class="mt-4 bg-orange-50 border-l-4 border-orange-primary p-3 rounded-r-xl max-w-2xl mx-auto animate-fade-in">
+            <p class="text-xs text-orange-800 font-medium italic">
+                <i class="fas fa-magic mr-1"></i> AI is prioritizing results for: <strong>"{{ request.GET.query }}"</strong>
+            </p>
         </div>
-        {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h2 class="text-3xl font-black text-gray-900 tracking-tight">Browse Products</h2>
+            <p class="text-gray-500 text-sm mt-1">Discover the best deals on Buy it Marketplace</p>
+        </div>
+        <div class="hidden md:block text-sm text-gray-400 font-medium">
+            Showing {{ products|length }} items
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+       {% include "onlineStore/components/product_list.html" %}
     </div>
 </div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
+
+    .htmx-request .search-text {
+        display: none;
+    }
+    .htmx-request .ai-loader {
+        display: flex;
+    }
+    .htmx-request#search-button {
+        background-color: #f97316; /* Keep button color while loading */
+        cursor: wait;
+        opacity: 0.9;
+    }
+</style>
 {% endblock content %}

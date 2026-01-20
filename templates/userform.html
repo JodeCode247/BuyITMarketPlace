@@ -3,452 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login or Register - BUY.IT</title>
+    <title>Login - Buy it Marketplace</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f4f4; /* Light gray background for the overall page */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh; /* Full viewport height */
-            margin: 0;
-            padding: 0; /* Remove body padding, handled by main-layout-container */
-            box-sizing: border-box;
+        :root { --orange-primary: #FF8C00; --dark-gray: #111827; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        
+        /* Desktop container styling */
+        @media (min-width: 768px) {
+            body { background-color: #f9fafb; }
+            .main-layout-container {
+                display: flex;
+                width: 100%;
+                max-width: 1000px;
+                min-height: 600px;
+                background-color: white;
+                border-radius: 2rem;
+                overflow: hidden;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+                margin: 2rem;
+            }
         }
 
-        .main-layout-container {
-            display: flex;
-            width: 90%; /* Responsive width for the entire container */
-            max-width: 1200px; /* Max width for desktop */
-            min-height: 70vh; /* Minimum height to ensure content fits */
-            background-color: white; /* Default background for the wrapper */
-            border-radius: 1rem; /* Rounded corners for the whole layout */
-            overflow: hidden; /* Ensures child elements respect border-radius */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); /* Enhanced shadow for depth */
-        }
-
+        /* BANNER LOGIC: Hidden on mobile, Flex on Desktop */
         .image-section {
-            flex: 3; /* Takes more space for the image */
-            background-image: url('https://placehold.co/1200x800/FFD700/000000?text=Welcome+to+BUY.IT'); /* Placeholder background image */
-            background-size: cover;
-            background-position: center;
-            position: relative; /* For the overlay */
-            display: flex; /* To center any text/content within the image (optional) */
+            display: none; 
+            background: linear-gradient(135deg, var(--orange-primary) 0%, #e67e00 100%);
+            color: white;
+            flex-direction: column;
             justify-content: center;
-            align-items: center;
+            padding: 4rem;
+            position: relative;
         }
 
-        .image-overlay {
+        @media (min-width: 768px) {
+            .image-section { display: flex; flex: 1; }
+        }
+
+        /* FORM SECTION: Full screen on mobile */
+        .form-content-wrapper {
+            width: 100%;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .form-content-wrapper { flex: 1.2; padding: 4rem; justify-content: center; }
+        }
+
+        /* Modern Tabs */
+        .form-switch button {
+            position: relative;
+            padding-bottom: 0.75rem;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-switch button.active { color: var(--dark-gray); }
+        .form-switch button.active::after {
+            content: '';
             position: absolute;
-            top: 0;
+            bottom: -1px;
             left: 0;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.1); /* Subtle dark overlay for better contrast */
-        }
-
-        .form-content-wrapper {
-            flex: 2; /* Takes less space for the forms */
-            display: flex; /* To center the form container inside */
-            justify-content: center;
-            align-items: center;
-            padding: 2rem; /* Padding around the actual form content */
-            background-color: white; /* Explicitly white background for the form side */
-        }
-
-        /* Adjust existing .container styles to fit the new layout */
-        .container {
-            /* These properties are now handled by .form-content-wrapper or .main-layout-container */
-            padding: 0; /* Remove padding as form-content-wrapper handles it */
-            box-shadow: none; /* Remove box shadow as main-layout-container handles it */
-            max-width: none; /* Allow it to expand within form-content-wrapper */
-            width: 100%; /* Take full width of its parent */
-            border-radius: 0; /* Remove border-radius as main-layout-container handles it */
-            background-color: transparent; /* Make it transparent to use form-content-wrapper's white background */
-        }
-
-        .form-switch {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        .form-switch button {
-            background: none;
-            border: none;
-            color: orange; /* Theme color */
-            cursor: pointer;
-            padding: 0.75rem 1rem;
-            font-size: 1.1em;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-            border-bottom: 2px solid transparent;
-        }
-
-        .form-switch button.active {
-            color: darkorange;
-            border-color: darkorange;
-        }
-
-        .form-switch button:hover:not(.active) {
-            color: #ff9800;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #374151;
+            height: 2px;
+            background: var(--orange-primary);
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.25rem;
-            font-size: 1em;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            padding: 1rem;
+            border: 1.5px solid #f3f4f6;
+            border-radius: 0.75rem;
+            background-color: #f9fafb;
+            transition: all 0.2s ease;
         }
-
         .form-group input:focus {
             outline: none;
-            border-color: orange;
-            box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.2);
+            border-color: var(--orange-primary);
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.05);
         }
 
-        .form-group button[type="submit"] {
-            background-color: orange;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            width: 100%;
-            font-size: 1em;
-            font-weight: bold;
-            transition: background-color 0.2s ease;
-        }
-
-        .form-group button[type="submit"]:hover {
-            background-color: darkorange;
-        }
-
-        #register-form {
-            display: none;
-        }
-
-        .social-login {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .social-login button {
-            background: none;
-            border: 1px solid #d1d5db;
-            padding: 0.6rem 1rem;
-            margin: 0.3rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9em;
-            color: #4b5563;
-        }
-
-        .social-login button:hover {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .social-login button i {
-            font-size: 1.25em;
-        }
-
-        /* Google Button Color */
-        #google-login {
-            color: #DB4437;
-            border-color: #DB4437;
-        }
-        #google-login:hover {
-            background-color: #DB4437;
-            color: white;
-        }
-
-        /* Facebook Button Color */
-        #facebook-login {
-            color: #4267B2;
-            border-color: #4267B2;
-        }
-        #facebook-login:hover {
-            background-color: #4267B2;
-            color: white;
-        }
-
-        /* Custom Alert Styles */
-        .alert-container {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            width: fit-content;
+        #alert-container {
+            transition: all 0.4s ease;
+            transform: translate(-50%, -20px);
             opacity: 0;
-            transition: opacity 0.3s ease;
         }
-
-        .alert-container.show {
-            opacity: 1;
-            display: block;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
-        }
-
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-        
-        .alert-info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border-color: #bee5eb;
-        }
-
-        .alert-icon {
-            font-size: 1.2rem;
-        }
-
-        .close-alert-button {
-            margin-left: auto;
-            border: none;
-            background: transparent;
-            padding: 0;
-            font-size: 1rem;
-            color: #155724;
-            cursor: pointer;
-        }
-
-        .close-alert-button:hover {
-            color: #0b2e13;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-layout-container {
-                flex-direction: column; /* Stack vertically on small screens */
-                min-height: 90vh; /* Adjust height for mobile */
-                width: 95%; /* Slightly smaller width on mobile */
-            }
-
-            .image-section {
-                height: 250px; /* Fixed height for image on mobile */
-                border-radius: 1rem 1rem 0 0; /* Rounded top corners */
-            }
-
-            .form-content-wrapper {
-                padding: 1.5rem; /* Smaller padding on mobile */
-                border-radius: 0 0 1rem 1rem; /* Rounded bottom corners */
-            }
-
-            .container { /* Ensure forms still look good inside form-content-wrapper on mobile */
-                max-width: 100%;
-            }
-        }
+        #alert-container.show { transform: translate(-50%, 20px); opacity: 1; }
     </style>
 </head>
-<body>
-    {# Custom Alert Container #}
-    <div class="alert-container" id="alert-container">
-        <div class="alert" role="alert">
-            <i class="alert-icon"></i> {# Icon will be dynamically added #}
-            <span id="alert-message"></span>
-            <button type="button" class="close-alert-button" id="close-alert-button" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div id="alert-container" class="fixed top-0 left-1/2 z-[100] w-[92%] max-w-md p-4 rounded-xl shadow-2xl flex items-center justify-between bg-white border border-gray-100">
+        <div class="flex items-center gap-3">
+            <i class="alert-icon text-lg"></i>
+            <span id="alert-message" class="font-semibold text-sm text-gray-800"></span>
         </div>
+        <button onclick="hideAlert()" class="text-gray-400 text-xl">&times;</button>
     </div>
 
     <div class="main-layout-container">
         <div class="image-section">
-            <div class="image-overlay"></div> {# Optional overlay for image #}
+            <div class="mb-6">
+                <span class="bg-white/20 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">Buy it Marketplace</span>
+            </div>
+            <h1 class="text-4xl font-bold leading-tight">Welcome <br>Back.</h1>
+            <p class="mt-4 text-orange-50 text-sm opacity-90 leading-relaxed">
+                Log in to access your dashboard and manage your marketplace activities.
+            </p>
         </div>
+
         <div class="form-content-wrapper">
-            <div class="container"> {# Retain current container for existing styles within the form area #}
-                <div class="form-switch">
-                    <button id="login-switch" class="active">Login</button>
-                    <button id="register-switch">Register</button>
+            <div class="md:hidden mb-10">
+                <h2 class="text-2xl font-black text-gray-900 tracking-tighter">BUY IT<span class="text-orange-primary">.</span></h2>
+                <p class="text-gray-400 text-sm font-medium">Marketplace Login</p>
+            </div>
+
+            <div class="form-switch flex gap-8 mb-8 border-b border-gray-100">
+                <button id="login-switch" class="active" onclick="toggleAuth('login')">Login</button>
+                <button id="register-switch" onclick="toggleAuth('register')">Register</button>
+            </div>
+
+            <form id="login-form" method="post" action="{% url 'onlinestore:login_user' %}" class="space-y-6">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Email Address</label>
+                    <input type="email" name="username" placeholder="name@email.com" required>
                 </div>
+                <div class="form-group">
+                    <div class="flex justify-between items-center mb-2 ml-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Password</label>
+                        <a href="#" class="text-[10px] font-bold text-orange-primary uppercase hover:underline">Forgot?</a>
+                    </div>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-sm hover:bg-black transition-all active:scale-[0.98]">
+                    Sign In
+                </button>
+            </form>
 
-                <form id="login-form" method='post' action="{% url 'onlinestore:login_user' %}">
-                    {% csrf_token %}
-                    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
-                    <div class="form-group">
-                        <label for="login-username">Email</label>
-                        <input placeholder="enter email" type="email" id="login-username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">Password</label>
-                        <input placeholder="password" type="password" id="login-password" name="password" required>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit">Login</button>
-                    </div>
-                    <div class="text-center text-sm mt-4">
-                        <a href="#" class="text-blue-600 hover:underline">Forgot password?</a>
-                    </div>
-                </form>
+            <form id="register-form" method="post" action="{% url 'onlinestore:register' %}" class="hidden space-y-5">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Username</label>
+                    <input type="text" name="username" placeholder="johndoe" required>
+                </div>
+                <div class="form-group">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Email</label>
+                    <input type="email" name="email" placeholder="name@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Create Password</label>
+                    <input type="password" name="password" placeholder="Min. 8 characters" required>
+                </div>
+                <div class="form-group">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Confirm Password</label>
+                    <input type="password" name="password2" placeholder="confirm password" required>
+                </div>
+                <button type="submit" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-sm hover:bg-black transition-all active:scale-[0.98]">
+                    Create Account
+                </button>
+            </form>
 
-                <form id="register-form" action="{% url 'onlinestore:register' %}" method='post'>
-                    {% csrf_token %}
-                    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Register</h2>
-                    <div class="form-group">
-                        <label for="register-username">Username</label>
-                        <input type="text" id="register-username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="register-email">Email</label>
-                        <input type="email" id="register-email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="register-password">Password</label>
-                        <input type="password" id="register-password" name="password" required placeholder='password'>
-                    </div>
-                    <div class="form-group">
-                        <label for="register-password2"> Confirm Password</label>
-                        <input type="password" id="register-password2" name="password2" placeholder='confirm password' required>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit">Register</button>
-                    </div>
-                </form>
-                
-                {% if debug_check %}
-                <div class="social-login" id="social-login">
-                    <p class="text-gray-500 text-sm mb-3">Or continue with</p>
-                    <a href="{% url 'social:begin' 'google-oauth2' %}">
-                        <button id="google-login" type="button">
-                            <i class="fab fa-google"></i> Google
-                        </button>
+            <div id="social-login-area" class="mt-8 pt-8 border-t border-gray-50">
+                <div class="flex flex-col gap-3">
+                    {% if debug_check %}
+                    <a href="{% url 'social:begin' 'google-oauth2' %}" class="w-full border border-gray-200 flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-4 h-4" alt="Google">
+                        Sign in with Google
                     </a>
-                     {% endif %}
-                    <a href="https://www.linkedin.com/in/nwizugbe-jhn-33b072365/">
-                    <button id="google-login" type="button" style="background-color: #0077B5; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fab fa-linkedin"></i> Linkedin
-            </button>
-            </a>
+                    {% endif %}
+                    <a href="https://www.linkedin.com/in/nwizugbe-jhn-33b072365/" class="w-full bg-[#0077B5] text-white flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-colors">
+                        <i class="fab fa-linkedin text-lg"></i>
+                        Continue with LinkedIn
+                    </a>
                 </div>
-               
             </div>
         </div>
     </div>
 
     <script>
-        const loginSwitch = document.getElementById('login-switch');
-        const registerSwitch = document.getElementById('register-switch');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const socialLoginDiv = document.getElementById('social-login');
+        function toggleAuth(type) {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const loginSwitch = document.getElementById('login-switch');
+            const registerSwitch = document.getElementById('register-switch');
+            const socialArea = document.getElementById('social-login-area');
 
-        const alertContainer = document.getElementById('alert-container');
-        const alertMessageSpan = document.getElementById('alert-message');
-        const closeAlertButton = document.getElementById('close-alert-button');
+            if (type === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginSwitch.classList.add('active');
+                registerSwitch.classList.remove('active');
+                socialArea.classList.remove('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                loginSwitch.classList.remove('active');
+                registerSwitch.classList.add('active');
+                socialArea.classList.add('hidden');
+            }
+        }
 
         function showAlert(message, type = 'success') {
-            alertMessageSpan.textContent = message;
-            alertContainer.querySelector('.alert').classList.remove('alert-success', 'alert-error', 'alert-info');
-            alertContainer.querySelector('.alert').classList.add(`alert-${type}`);
+            const container = document.getElementById('alert-container');
+            const msgSpan = document.getElementById('alert-message');
+            const icon = container.querySelector('.alert-icon');
             
-            const iconElement = alertContainer.querySelector('.alert-icon');
-            if (iconElement) {
-                iconElement.classList.remove('fa-check-circle', 'fa-times-circle', 'fa-info-circle');
-                if (type === 'success') {
-                    iconElement.classList.add('fas', 'fa-check-circle');
-                } else if (type === 'error') {
-                    iconElement.classList.add('fas', 'fa-times-circle');
-                } else if (type === 'info') {
-                    iconElement.classList.add('fas', 'fa-info-circle');
-                }
-            }
-
-            alertContainer.classList.add('show');
-
-            setTimeout(() => {
-                hideAlert();
-            }, 5000);
+            msgSpan.textContent = message;
+            icon.className = type === 'success' 
+                ? 'alert-icon fas fa-check-circle text-emerald-500' 
+                : 'alert-icon fas fa-exclamation-circle text-red-500';
+            
+            container.classList.add('show');
+            setTimeout(hideAlert, 4000);
         }
 
         function hideAlert() {
-            alertContainer.classList.remove('show');
-            setTimeout(() => { alertContainer.style.display = 'none'; }, 300);
+            document.getElementById('alert-container').classList.remove('show');
         }
 
-        if (closeAlertButton) {
-            closeAlertButton.addEventListener('click', hideAlert);
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             {% if messages %}
                 {% for message in messages %}
                     showAlert("{{ message }}", "{{ message.tags }}");
                 {% endfor %}
             {% endif %}
-
-            loginSwitch.classList.add('active');
-            loginForm.style.display = 'block';
-            registerForm.style.display = 'none';
-            if (socialLoginDiv) {
-                socialLoginDiv.style.display = 'block';
-            }
-        });
-
-        loginSwitch.addEventListener('click', () => {
-            loginForm.style.display = 'block';
-            registerForm.style.display = 'none';
-            loginSwitch.classList.add('active');
-            registerSwitch.classList.remove('active');
-            if (socialLoginDiv) {
-                socialLoginDiv.style.display = 'block';
-            }
-        });
-
-        registerSwitch.addEventListener('click', () => {
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
-            loginSwitch.classList.remove('active');
-            registerSwitch.classList.add('active');
-            if (socialLoginDiv) {
-                socialLoginDiv.style.display = 'none';
-            }
         });
     </script>
-
 </body>
 </html>

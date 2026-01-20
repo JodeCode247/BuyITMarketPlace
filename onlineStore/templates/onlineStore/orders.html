@@ -1,522 +1,152 @@
 {% extends "onlineStore/base.html" %}
 
+{% block title %}Order History | Buy It Marketplace{% endblock %}
+
 {% block content %}
-
-<style>
-    /* Base styles (some inherited from base.html or common setup) */
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f4f4f4; /* Light gray background */
-        line-height: 1.6;
-        color: #333;
-    }
-
-    /* General form input styles */
-    input[type="text"],
-    input[type="number"],
-    input[type="date"], /* Added for date input */
-    select,
-    textarea {
-        width: 100%;
-        padding: 0.5rem;
-        border-radius: 0.375rem; /* Tailwind's rounded-md */
-        border: 1px solid #ced4da; /* Tailwind's gray-300 */
-        margin-bottom: 1rem;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    input[type="date"]:focus,
-    select:focus,
-    textarea:focus {
-        outline: none;
-        border-color: orange;
-        box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.2);
-    }
-
-    label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #374151;
-    }
-
-    /* Button Styling Improvements */
-    .btn-orange {
-        background-color: orange; /* Solid orange color */
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border: none;
-        border-radius: 0.375rem;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 600;
-        transition: background-color 0.2s ease, transform 0.1s ease;
-        white-space: nowrap;
-        display: inline-flex; /* For consistent icon/text alignment */
-        align-items: center;
-        justify-content: center;
-        gap: 8px; /* Space between text and icon/spinner */
-    }
-
-    .btn-orange:hover {
-        background-color: darkorange; /* Darker orange on hover */
-        transform: translateY(-1px); /* Slight lift effect */
-    }
-
-    .btn-orange:active {
-        background-color: #D45A00; /* Even darker orange on active */
-        transform: translateY(0); /* Press down effect */
-    }
-
-    /* Specific adjustment for the filter button in its form */
-    #order-filter form button[type="submit"] {
-        margin-top: 0; /* Align with input */
-        width: auto;
-        align-self: center; /* Align it vertically */
-    }
-
-    /* Centering and constraining the main content */
-    main {
-        flex: 1;
-        padding: 2rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    #order-list {
-        background-color: #ffffff;
-        border-radius: 0.75rem; /* More rounded corners */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Stronger shadow */
-        padding: 2rem; /* Increased padding */
-        width: 100%;
-        max-width: 800px; /* Increased max-width for content richness */
-        margin: 0 auto;
-        border: 1px solid #e0e0e0; /* Subtle border */
-    }
-    
-    #order-list h2 {
-        font-size: 1.8rem; /* Larger heading */
-        font-weight: 700; /* Bold */
-        color: #1a202c; /* Darker color */
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-
-    /* Order Filter Section */
-    #order-filter {
-        margin-bottom: 1.5rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #f0f0f0; /* Lighter separator */
-    }
-    #order-filter form {
-        display: flex;
-        flex-wrap: wrap; /* Allow wrapping on small screens */
-        align-items: flex-end; /* Align inputs and button at the bottom */
-        gap: 1rem; /* Space between elements */
-        background-color: transparent; /* Make form background transparent */
-        padding: 0;
-        margin-top: 0;
-        box-shadow: none;
-    }
-    #order-filter .form-group-item { /* New class for form group items */
-        flex: 1; /* Allow items to grow */
-        min-width: 180px; /* Minimum width before wrapping */
-    }
-    #order-filter input[type="date"] {
-        margin-bottom: 0; /* Remove default margin */
-    }
-
-
-    /* Order List Styling */
-    #orders {
-        list-style: none;
-        padding: 0;
-    }
-
-    #orders > li { /* Direct children of #orders */
-        background-color: #fcfcfc; /* Slightly different background for each order item */
-        border: 1px solid #e5e5e5;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem; /* Space between order cards */
-        padding: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow for each card */
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    #orders > li:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .order-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        flex-wrap: wrap; /* Allow wrapping for buttons on small screens */
-        gap: 0.75rem; /* Space between items in header */
-    }
-    
-    .order-header span {
-        flex-shrink: 0; /* Prevent text from shrinking too much */
-        font-size: 1rem;
-        color: #4a5568;
-    }
-    .order-header strong {
-        color: #1a202c;
-    }
-
-    /* Order Items List */
-    .order-items {
-        list-style: none;
-        padding-left: 1rem; /* Indent for readability */
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-        border-top: 1px dashed #e0e0e0; /* Dashed separator */
-        padding-top: 1rem;
-    }
-    .order-items li {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-        font-size: 0.95rem;
-        color: #555;
-        border-bottom: 1px dotted #f5f5f5; /* Dotted separator for items */
-    }
-    .order-items li:last-child {
-        border-bottom: none;
-    }
-
-    .order-total {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #1a202c;
-        text-align: right;
-        margin-top: 1rem;
-    }
-
-    .no-orders {
-        text-align: center;
-        color: #718096;
-        padding: 2rem;
-        font-style: italic;
-    }
-
-    /* Tracking Details Popup */
-    .tracking-popup-container {
-        display: none; /* Hidden by default */
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
-        justify-content: center;
-        align-items: center;
-        z-index: 1001; /* Higher z-index */
-        opacity: 0; /* For fade-in effect */
-        transition: opacity 0.3s ease;
-    }
-    .tracking-popup-container.show {
-        opacity: 1;
-        display: flex;
-    }
-
-    .tracking-popup-content {
-        background-color: white;
-        padding: 2rem; /* Increased padding */
-        border-radius: 0.75rem; /* More rounded */
-        width: 90%;
-        max-width: 500px; /* Increased max width */
-        text-align: left;
-        position: relative;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); /* Stronger shadow */
-        transform: translateY(20px); /* For slide-up effect */
-        transition: transform 0.3s ease;
-    }
-    .tracking-popup-container.show .tracking-popup-content {
-        transform: translateY(0);
-    }
-
-    .tracking-popup-content h2 {
-        text-align: center;
-        margin-bottom: 1.5rem;
-        color: #1a202c;
-        font-size: 1.8rem;
-        font-weight: 700;
-    }
-
-    .tracking-popup-content p {
-        margin-bottom: 0.75rem;
-        color: #555;
-        font-size: 1rem;
-        line-height: 1.5;
-    }
-
-    .tracking-popup-content p strong {
-        color: #111;
-        font-weight: 600;
-    }
-
-    .close-button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        font-size: 2em; /* Larger close button */
-        color: #666;
-        transition: color 0.2s ease;
-    }
-    .close-button:hover {
-        color: #333;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 640px) {
-        main {
-            padding: 1rem; /* Smaller padding on mobile */
-        }
-        #order-list {
-            padding: 1.5rem; /* Adjust padding for order list on smaller screens */
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        #order-list h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        .order-header {
-            flex-direction: column; /* Stack header items vertically */
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-        .order-header span {
-            font-size: 0.9rem;
-        }
-        .btn-orange {
-            width: 100%; /* Full width buttons on mobile */
-            margin-left: 0;
-            margin-top: 0.5rem; /* Space between stacked buttons */
-        }
-        #order-filter form {
-            flex-direction: column; /* Stack filter elements */
-            align-items: stretch; /* Stretch inputs */
-        }
-        #order-filter .form-group-item {
-            min-width: unset; /* Remove min-width to allow full stretch */
-        }
-        #order-filter form button[type="submit"] {
-            width: 100%;
-        }
-        .tracking-popup-content {
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-        }
-        .tracking-popup-content h2 {
-            font-size: 1.5rem;
-        }
-    }
-</style>
-
-<main>
-    <div id="order-list">
-        <h2>Order History</h2>
-        <div id="order-filter">
-            <form action="" method="post" class="flex flex-col sm:flex-row sm:items-end gap-4">
-                {% csrf_token %}
-                <div class="form-group-item">
-                    <label for="filter-date">Filter by Date:</label>
-                    <input type="date" id="filter-date" name="filter-date" class="form-input">
-                </div>
-                <button type="submit" class="btn-orange filter-button">
-                    <i class="fas fa-filter"></i> Filter
-                </button>
-            </form>
-        </div>
-        <hr class="my-6 border-gray-200"> {# Tailwind hr styling #}
-        
-        <ul id="orders">
-            {% if orders %}
-                {% for order in orders %}
-                    <li>
-                        <div class="order-header">
-                            <span><strong>Order ID:</strong> {{ order.order_id }}</span>
-                            <span><strong>Order Date:</strong> {{ order.created_at|date:"Y-m-d" }}</span>
-                            <div class="flex flex-wrap justify-end gap-2 mt-2 sm:mt-0"> {# Added wrapper for buttons #}
-                                <button class="btn-orange order-details-button">
-                                    <i class="fas fa-info-circle"></i> Details
-                                </button>
-                                <button class="btn-orange track-order-button"
-                                    data-order-id="{{ order.order_id }}"
-                                    data-customer-name="{{ order.package_detail.customer_name }}"
-                                    data-customer-email="{{ order.package_detail.email }}"
-                                    data-address="{{ order.package_detail.address }}"
-                                    data-state="{{ order.package_detail.state }}"
-                                    data-country="{{ order.package_detail.country }}"
-                                    data-description="{{ order.package_detail.description|default:"No special instructions." }}">
-                                    <i class="fas fa-truck"></i> Track Order
-                                </button>
-                            </div>
-                        </div>
-                        <ul class="order-items" style="display: none;">
-                            {% for item in order.order_items.all %}
-                                <li>
-                                    <span>{% if item.product_name %}                        
-                                    {{ item.product_name }} {% else %}  {{item.product}} {% endif %} ×{{ item.quantity }}</span>
-                                    <span>₦{{ item.price }}</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                        <p class="order-total">Total: ₦{{ order.total_amount }}</p>
-                    </li>
-                    {# hr removed here, replaced by margin-bottom on li #}
-                {% endfor %}
-            {% else %}
-                <p class="no-orders">No orders found.</p>
-            {% endif %}
-        </ul>
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-1">Order History</h1>
+        <p class="text-sm text-gray-500">View and track your recent marketplace purchases</p>
     </div>
-</main>
 
-{# Tracking Details Popup #}
-<div class="tracking-popup-container" id="tracking-popup">
-    <div class="tracking-popup-content">
-        <button class="close-button" id="close-tracking-popup">&times;</button>
-        <h2>Order Tracking Details</h2>
-        <p><strong>Order ID:</strong> <span id="popup-order-id"></span></p>
-        <p><strong>Customer Name:</strong> <span id="popup-customer-name"></span></p>
-        <p><strong>Customer Email:</strong> <span id="popup-customer-email"></span></p>
-        <p><strong>Shipping Address:</strong> <span id="popup-address"></span></p>
-        <p><strong>State:</strong> <span id="popup-state"></span></p>
-        <p><strong>Country:</strong> <span id="popup-country"></span></p>
-        <p><strong>Special Instructions:</strong> <span id="popup-description"></span></p>
-        {# You can add more tracking details here like status, estimated delivery, etc. #}
-        <div class="mt-6 text-center">
-            <button class="btn-orange" onclick="copyTrackingDetails()">Copy Details</button>
-        </div>
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-8">
+        <form method="post" class="flex flex-col md:flex-row items-end gap-4">
+            {% csrf_token %}
+            <div class="flex-1 w-full">
+                <label for="filter-date" class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 ml-1">Filter by Date</label>
+                <input type="date" id="filter-date" name="filter-date" 
+                       class="w-full bg-gray-50 border-gray-100 rounded-xl focus:ring-2 focus:ring-orange-primary/20 text-sm p-2.5">
+            </div>
+            <button type="submit" class="w-full md:w-auto bg-gray-900 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-filter text-xs"></i> Filter
+            </button>
+        </form>
+    </div>
+
+    <div class="space-y-4">
+        {% if orders %}
+            {% for order in orders %}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
+                <div class="p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[10px] font-bold text-orange-primary bg-orange-50 px-2 py-0.5 rounded">#{{ order.order_id }}</span>
+                            <span class="text-xs text-gray-400">{{ order.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900">₦{{ order.total_amount }}</p>
+                    </div>
+                    
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button class="order-details-button flex-1 md:flex-none border border-gray-100 text-gray-600 px-4 py-2 rounded-lg font-semibold text-xs hover:bg-gray-50 transition-colors">
+                             Details
+                        </button>
+                        <button class="track-order-button flex-1 md:flex-none bg-orange-primary text-white px-4 py-2 rounded-lg font-semibold text-xs hover-orange transition-all shadow-sm"
+                                data-order-id="{{ order.order_id }}"
+                                data-customer-name="{{ order.package_detail.customer_name }}"
+                                data-address="{{ order.package_detail.address }}"
+                                data-state="{{ order.package_detail.state }}"
+                                data-country="{{ order.package_detail.country }}">
+                            Track Order
+                        </button>
+                    </div>
+                </div>
+
+                <div class="order-items hidden border-t border-gray-50 bg-gray-50/50 p-5">
+                    <h4 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Order Summary</h4>
+                    <ul class="space-y-2">
+                        {% for item in order.order_items.all %}
+                        <li class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">
+                                {{ item.product_name|default:item.product }} 
+                                <span class="text-orange-primary font-bold ml-1">×{{ item.quantity }}</span>
+                            </span>
+                            <span class="font-semibold text-gray-900">₦{{ item.price }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+                <i class="fas fa-box-open text-gray-200 text-4xl mb-3"></i>
+                <p class="text-gray-400 text-sm">No orders found.</p>
+                <a href="{% url 'onlinestore:home' %}" class="inline-block mt-3 text-orange-primary text-sm font-bold hover:underline">Browse Products</a>
+            </div>
+        {% endif %}
     </div>
 </div>
 
+<div id="tracking-popup" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl relative popup-content">
+        <button id="close-tracking-popup" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-xl">&times;</button>
+        
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Tracking Information</h2>
+
+        <div class="space-y-3 mb-6">
+            <div class="bg-gray-50 p-3 rounded-xl">
+                <p class="text-[9px] font-bold uppercase text-gray-400">Order ID</p>
+                <p class="text-gray-900 font-semibold text-sm" id="popup-order-id"></p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gray-50 p-3 rounded-xl">
+                    <p class="text-[9px] font-bold uppercase text-gray-400">Recipient</p>
+                    <p class="text-gray-900 font-semibold text-xs" id="popup-customer-name"></p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl">
+                    <p class="text-[9px] font-bold uppercase text-gray-400">Location</p>
+                    <p class="text-gray-900 font-semibold text-xs" id="popup-state"></p>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-3 rounded-xl">
+                <p class="text-[9px] font-bold uppercase text-gray-400">Shipping Address</p>
+                <p class="text-gray-600 text-xs" id="popup-address-full"></p>
+            </div>
+        </div>
+
+        <button onclick="copyTrackingDetails()" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-black transition-all">
+            Copy Details
+        </button>
+    </div>
+</div>
 
 <script>
+    // Logic remains functional but refined for the new classes
     document.addEventListener('DOMContentLoaded', () => {
-        const orderDetailsButtons = document.querySelectorAll('.order-details-button');
-        orderDetailsButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const orderItemContainer = button.closest('li');
-                if (orderItemContainer) {
-                    const orderItemsList = orderItemContainer.querySelector('.order-items');
-                    if (orderItemsList) {
-                        // Toggle display using a class for smoother transitions if desired
-                        if (orderItemsList.style.display === 'none' || orderItemsList.style.display === '') {
-                            orderItemsList.style.display = 'block';
-                            // Optional: change button text to 'Hide Details'
-                        } else {
-                            orderItemsList.style.display = 'none';
-                            // Optional: change button text to 'Show Details'
-                        }
-                    }
-                }
+        document.querySelectorAll('.order-details-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const itemDiv = btn.closest('.bg-white').querySelector('.order-items');
+                itemDiv.classList.toggle('hidden');
+                btn.textContent = itemDiv.classList.contains('hidden') ? 'Details' : 'Close';
             });
         });
 
-        // --- Tracking Popup Logic ---
-        const trackingPopupContainer = document.getElementById('tracking-popup');
-        const closeTrackingPopupButton = document.getElementById('close-tracking-popup');
-        const trackOrderButtons = document.querySelectorAll('.track-order-button');
-
-        trackOrderButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const orderId = button.dataset.orderId;
-                const customerName = button.dataset.customerName;
-                const address = button.dataset.address;
-                const customerEmail = button.dataset.customerEmail;
-                const state = button.dataset.state;
-                const country = button.dataset.country;
-                const description = button.dataset.description;
-
-                document.getElementById('popup-order-id').textContent = orderId;
-                document.getElementById('popup-customer-name').textContent = customerName;
-                document.getElementById('popup-address').textContent = address;
-                document.getElementById('popup-state').textContent = state;
-                document.getElementById('popup-customer-email').textContent = customerEmail;
-                document.getElementById('popup-country').textContent = country;
-                document.getElementById('popup-description').textContent = description;
-
-                trackingPopupContainer.classList.add('show'); // Use class for show/hide transition
+        const popup = document.getElementById('tracking-popup');
+        
+        document.querySelectorAll('.track-order-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const d = btn.dataset;
+                document.getElementById('popup-order-id').innerText = d.orderId;
+                document.getElementById('popup-customer-name').innerText = d.customerName;
+                document.getElementById('popup-state').innerText = d.state;
+                document.getElementById('popup-address-full').innerText = `${d.address}, ${d.state}, ${d.country}`;
+                
+                popup.classList.replace('hidden', 'flex');
             });
         });
 
-        closeTrackingPopupButton.addEventListener('click', () => {
-            trackingPopupContainer.classList.remove('show');
+        document.getElementById('close-tracking-popup').addEventListener('click', () => {
+            popup.classList.replace('flex', 'hidden');
         });
-
-        // Close tracking popup if clicked outside
-        window.addEventListener('click', (event) => {
-            if (event.target === trackingPopupContainer) {
-                trackingPopupContainer.classList.remove('show');
-            }
-        });
-
-        // Function to copy tracking details
-        window.copyTrackingDetails = function() {
-            const orderId = document.getElementById('popup-order-id').textContent;
-            const customerName = document.getElementById('popup-customer-name').textContent;
-            const customerEmail = document.getElementById('popup-customer-email').textContent;
-            const address = document.getElementById('popup-address').textContent;
-            const state = document.getElementById('popup-state').textContent;
-            const country = document.getElementById('popup-country').textContent;
-            const description = document.getElementById('popup-description').textContent;
-
-            const textToCopy = `Order ID: ${orderId}\nCustomer Name: ${customerName}\nCustomer Email: ${customerEmail}\nShipping Address: ${address}, ${state}, ${country}\nSpecial Instructions: ${description}`;
-
-            // Using document.execCommand('copy') for better iframe compatibility
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = textToCopy;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            try {
-                const successful = document.execCommand('copy');
-                const msg = successful ? 'Details copied to clipboard!' : 'Failed to copy details.';
-                // Assuming showAlert function is available from base.html
-                if (typeof showAlert === 'function') {
-                    showAlert(msg, successful ? 'success' : 'error');
-                } else {
-                    console.warn('showAlert function not found. Showing browser alert:', msg);
-                    alert(msg); // Fallback to browser alert if showAlert is not available
-                }
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-                if (typeof showAlert === 'function') {
-                    showAlert('Failed to copy details to clipboard.', 'error');
-                } else {
-                    alert('Failed to copy details to clipboard.');
-                }
-            } finally {
-                document.body.removeChild(tempTextArea);
-            }
-        };
-
-        // You might need these functions in your base.html or a shared JS file
-        // For demonstration, I'm defining them here, but typically they would be global
-        // or passed down from your base template.
-        // function showAlert(message, type = 'success') {
-        //     // Implement your custom alert logic here, matching the style
-        //     // used on other pages (e.g., product page)
-        //     console.log(`Alert (${type}): ${message}`);
-        //     // Example: document.getElementById('global-alert-message').textContent = message;
-        //     // document.getElementById('global-alert-container').style.display = 'block';
-        //     // ... logic to show alert visually ...
-        // }
-        // function getCookie(name) { /* ... implementation ... */ }
-        // function fetchCartCount() { /* ... implementation ... */ }
-
     });
-</script>
 
-{% endblock content %}
+    window.copyTrackingDetails = function() {
+        const text = `Order: ${document.getElementById('popup-order-id').innerText}\nAddress: ${document.getElementById('popup-address-full').innerText}`;
+        navigator.clipboard.writeText(text).then(() => {
+            if (typeof showAlert === 'function') showAlert('Copied!', 'success');
+        });
+    };
+</script>
+{% endblock %}

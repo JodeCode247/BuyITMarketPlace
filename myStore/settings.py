@@ -16,7 +16,6 @@ SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 # print(os.getenv('DEBUG'))
 DEBUG = os.getenv('DEBUG', 'False') == 'True' # Convert DEBUG to boolean
-DEBUG=False
 
 ALLOWED_HOSTS = ["*"] 
 AUTH_USER_MODEL ="onlineStore.MyUsers"
